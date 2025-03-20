@@ -1,13 +1,8 @@
 package co.com.bancolombia.r2dbc.gameType;
 
 import co.com.bancolombia.model.gametype.GameType;
-import co.com.bancolombia.r2dbc.entity.GameTypeEntity;
+import co.com.bancolombia.r2dbc.entities.GameTypeEntity;
 import co.com.bancolombia.model.gametype.gateways.GameTypesRepository;
-import co.com.bancolombia.model.tournamentadmin.TournamentAdmin;
-import co.com.bancolombia.model.tournamentadmin.gateways.TournamentAdminRepository;
-import co.com.bancolombia.r2dbc.entity.TournamentAdminsEntity;
-import co.com.bancolombia.r2dbc.entity.TournamentEntity;
-import co.com.bancolombia.r2dbc.entity.UserEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
@@ -25,8 +20,6 @@ public class GameTypeEntityRepositoryAdapter implements GameTypesRepository {
     private final GameTypeEntityRepository gameTypeEntityRepository;
 
     public Mono<GameType> findById(Integer id) {
-
-        log.info("*******************************************************Saving GameType findById: {}", id);
 
         return r2dbcEntityTemplate.select(GameTypeEntity.class)
                 .matching(Query.query(Criteria.where("id_game_type").is(id)))

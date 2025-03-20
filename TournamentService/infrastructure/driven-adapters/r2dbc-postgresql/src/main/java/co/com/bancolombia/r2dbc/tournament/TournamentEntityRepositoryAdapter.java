@@ -1,16 +1,13 @@
 package co.com.bancolombia.r2dbc.tournament;
 
-import co.com.bancolombia.model.enums.TournamentStatus;
 import co.com.bancolombia.model.tournament.Tournament;
 import co.com.bancolombia.model.tournament.gateways.TournamentRepository;
-import co.com.bancolombia.r2dbc.entity.CategoryEntity;
-import co.com.bancolombia.r2dbc.entity.GameTypeEntity;
-import co.com.bancolombia.r2dbc.entity.TournamentEntity;
-import co.com.bancolombia.r2dbc.entity.UserEntity;
-import io.r2dbc.postgresql.PostgresqlConnectionFactoryProvider;
+import co.com.bancolombia.r2dbc.entities.CategoryEntity;
+import co.com.bancolombia.r2dbc.entities.GameTypeEntity;
+import co.com.bancolombia.r2dbc.entities.TournamentEntity;
+import co.com.bancolombia.r2dbc.entities.UserEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.data.relational.core.query.Query;

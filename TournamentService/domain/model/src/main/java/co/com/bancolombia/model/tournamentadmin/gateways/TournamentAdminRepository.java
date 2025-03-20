@@ -1,6 +1,5 @@
 package co.com.bancolombia.model.tournamentadmin.gateways;
 
-import co.com.bancolombia.model.tournament.Tournament;
 import co.com.bancolombia.model.tournamentadmin.TournamentAdmin;
 import reactor.core.publisher.Mono;
 

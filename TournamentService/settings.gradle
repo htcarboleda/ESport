@@ -21,3 +21,5 @@ include ':usecase'
 project(':usecase').projectDir = file('./domain/usecase')
 include ':constant'
 project(':constant').projectDir = file('./infrastructure/helpers/constant')
+include ':async-event-bus'
+project(':async-event-bus').projectDir = file('./infrastructure/driven-adapters/async-event-bus')

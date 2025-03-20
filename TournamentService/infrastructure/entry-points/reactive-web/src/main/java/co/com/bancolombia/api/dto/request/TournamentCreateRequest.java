@@ -51,8 +51,11 @@ public class TournamentCreateRequest {
     @NotNull(message = "El estado del torneo es obligatorio")
     private TournamentStatus status;
 
-    // Lista de administradores adicionales (opcional)
+    // Lista de administradores
     private List<TournamentAdminRequest> additionalAdmins;
+
+    // Lista de etapas
+    private List<TournamentStages> stages;
 
     @AssertTrue(message = "La fecha de fin debe ser igual o posterior a la fecha de inicio")
     public boolean isValidDateRange() {
@@ -62,4 +65,12 @@ public class TournamentCreateRequest {
         return !endDate.isBefore(startDate);
     }
 
+    @AssertTrue(message = "Si el torneo es publicado, debe tener al menos una etapa")
+    public boolean isValidStages() {
+        if(TournamentStatus.PUBLICADO.equals(status)){
+            return stages != null && !stages.isEmpty();
+        } else {
+            return true;
+        }
+    }
 }

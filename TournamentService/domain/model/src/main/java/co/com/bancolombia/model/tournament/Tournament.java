@@ -2,16 +2,14 @@ package co.com.bancolombia.model.tournament;
 import co.com.bancolombia.model.enums.TournamentFormat;
 import co.com.bancolombia.model.enums.TournamentStatus;
 import co.com.bancolombia.model.category.Category;
-import co.com.bancolombia.model.exceptions.BusinessException;
 import co.com.bancolombia.model.gametype.GameType;
 import co.com.bancolombia.model.tournamentadmin.TournamentAdmin;
+import co.com.bancolombia.model.tournamentstage.TournamentStage;
 import co.com.bancolombia.model.user.User;
 import lombok.Builder;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -38,14 +36,13 @@ public class Tournament {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-
     private Category category;
     private GameType gameType;
     private User creator;
 
-
     @Builder.Default
     private List<TournamentAdmin> admins = new ArrayList<>();
 
-
+    @Builder.Default
+    private List<TournamentStage> stages = new ArrayList<>();
 }

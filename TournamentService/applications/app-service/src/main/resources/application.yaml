@@ -11,6 +11,13 @@ spring:
       path: "/h2"
   profiles:
     include: null
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: esport
+    password: esport123!
+    ssl:
+      enabled: false
 management:
   endpoints:
     web:
@@ -33,3 +40,7 @@ logging:
     io.r2dbc: DEBUG
     org.springframework.r2dbc: DEBUG
     org.springframework.data.r2dbc: DEBUG
+app:
+  async:
+    direct-async-gateway:
+      enabled: true

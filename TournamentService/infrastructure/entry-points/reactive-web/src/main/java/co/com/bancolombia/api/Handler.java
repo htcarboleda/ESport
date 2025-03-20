@@ -7,6 +7,7 @@ import co.com.bancolombia.api.dto.response.TournamentListResponse;
 import co.com.bancolombia.api.dto.validator.ObjectValidator;
 import co.com.bancolombia.model.tournament.Tournament;
 import co.com.bancolombia.model.tournamentadmin.TournamentAdmin;
+import co.com.bancolombia.model.tournamentstage.TournamentStage;
 import co.com.bancolombia.usecase.tournament.CreateTournamentUseCase;
 import co.com.bancolombia.usecase.tournament.GetTournamentsUseCase;
 import lombok.RequiredArgsConstructor;
@@ -99,7 +100,7 @@ public class Handler {
     }
 
     private Tournament CreateRqToTournament(TournamentCreateRequest rs) {
-        log.info("CreateRqToTournament: {}", rs.getIsFree());
+        log.info("******************************************************************** CreateRqToTournament: {}", rs.toString());
 
         return Tournament.builder()
                 .name(rs.getName())
@@ -117,6 +118,24 @@ public class Handler {
                                 .map(admin -> TournamentAdmin.builder()
                                         .userId(admin.getUserId())
                                         .role(admin.getRole())
+                                        .build())
+                                .toList() :
+                        null
+                )
+                .stages(rs.getStages() != null ?
+                        rs.getStages().stream()
+                                .map(stage -> TournamentStage.builder()
+                                        .name(stage.getName())
+                                        .startDate(stage.getStartDate())
+                                        .endDate(stage.getEndDate())
+                                        .participantPrice(stage.getParticipantPrice())
+                                        .spectatorPrice(stage.getSpectatorPrice())
+                                        .maxParticipantTickets(stage.getMaxParticipantTickets())
+                                        .maxSpectatorTickets(stage.getMaxSpectatorTickets())
+                                        .freeParticipantSlots(stage.getFreeParticipantSlots())
+                                        .paidParticipantSlots(stage.getPaidParticipantSlots())
+                                        .freeSpectatorSlots(stage.getFreeSpectatorSlots())
+                                        .paidSpectatorSlots(stage.getPaidSpectatorSlots())
                                         .build())
                                 .toList() :
                         null
