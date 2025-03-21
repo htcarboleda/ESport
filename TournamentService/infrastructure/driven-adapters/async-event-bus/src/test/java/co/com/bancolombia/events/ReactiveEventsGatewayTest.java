@@ -13,7 +13,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class ReactiveEventsGatewayTest {
+class ReactiveEventsGatewayTest {
 
     @Mock
     private DomainEventBus domainEventBus;
@@ -27,7 +27,7 @@ public class ReactiveEventsGatewayTest {
     }
 
     @Test
-    public void testEmitLogsEvent() {
+    void testEmitLogsEvent() {
         Object event = new Object() {
             @Override
             public String toString() {
@@ -44,7 +44,7 @@ public class ReactiveEventsGatewayTest {
 
 
     @Test
-    public void testEmitConstructsDomainEvent() {
+    void testEmitConstructsDomainEvent() {
         Object event = new Object() {
             @Override
             public String toString() {

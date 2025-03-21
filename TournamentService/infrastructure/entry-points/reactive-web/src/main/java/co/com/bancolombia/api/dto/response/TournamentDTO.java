@@ -1,10 +1,4 @@
 package co.com.bancolombia.api.dto.response;
-
-import co.com.bancolombia.model.category.Category;
-import co.com.bancolombia.model.enums.TournamentFormat;
-import co.com.bancolombia.model.enums.TournamentStatus;
-import co.com.bancolombia.model.gametype.GameType;
-import co.com.bancolombia.model.user.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

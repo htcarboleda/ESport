@@ -1,4 +1,4 @@
-package co.com.bancolombia.r2dbc.tournamentAdmins;
+package co.com.bancolombia.r2dbc.tournamentadmins;
 
 import co.com.bancolombia.model.tournamentadmin.TournamentAdmin;
 import co.com.bancolombia.model.tournamentadmin.gateways.TournamentAdminRepository;
@@ -27,7 +27,7 @@ public class TournamentAdminsEntityRepositoryAdapter  implements TournamentAdmin
                             Query.query(Criteria.where("id_user").is(tournamentAdminEntity.getUserId())), UserEntity.class);
 
                     return userEntityMono
-                            .map(userEntity -> tournamentAdminEntity.toDomain(userEntity))
+                            .map(tournamentAdminEntity::toDomain)
                             ;
                 });
     }

@@ -1,4 +1,4 @@
-package co.com.bancolombia.r2dbc.tournamentStage;
+package co.com.bancolombia.r2dbc.tournamentstage;
 
 import co.com.bancolombia.model.tournamentstage.TournamentStage;
 import co.com.bancolombia.model.tournamentstage.gateways.TournamentStageRepository;
@@ -18,6 +18,6 @@ public class TournamentStagesEntityRepositoryAdapter implements TournamentStageR
     public Mono<TournamentStage> save(TournamentStage tournamentStage) {
 
         return tournamentStagesEntityRepository.save(TournamentStageEntity.fromDomain(tournamentStage))
-                .map(userEntity -> userEntity.toDomain());
+                .map(TournamentStageEntity::toDomain);
     }
 }

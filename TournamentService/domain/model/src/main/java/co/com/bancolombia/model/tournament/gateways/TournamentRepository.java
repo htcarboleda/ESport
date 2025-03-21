@@ -1,6 +1,4 @@
 package co.com.bancolombia.model.tournament.gateways;
-
-import co.com.bancolombia.model.enums.TournamentStatus;
 import co.com.bancolombia.model.tournament.Tournament;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;

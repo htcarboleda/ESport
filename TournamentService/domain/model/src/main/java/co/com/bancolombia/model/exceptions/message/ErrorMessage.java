@@ -10,6 +10,9 @@ public enum ErrorMessage {
 
     CATEGORY_NOT_FOUND("ATTDB0001", "Categoria No encontrada", 404),
     GAMETYPE_NOT_FOUND("ATTDB0002", "Tipo de Juego No encontrado", 404),
+    TOURNAMENT_NOT_FOUND("ATTDB0003", "Torneo No encontrado", 404),
+
+
 
     INVALID_REQUEST("ATTDB0001", "Petición inválida", 500),
     INVALID_HEADERS("ATTDB0002", "Encabezados inválidos", 500),
@@ -22,6 +25,8 @@ public enum ErrorMessage {
     AFFINITY_GROUP_ID_ERROR("ATTDBB0010", "Error al homologar el valor del affinity group id", 500),
     GENERATION_ERROR("ATTDB0012", "Error interno del servidor", 500),
     MAPPER_ERROR("ATTDT0005", "Error interno del servidor", 500),
+
+
     EXTERNAL_MESSAGE_ERROR("ATTDT9999", "Servicio no disponible.", 503);
 
     private final String code;

@@ -24,6 +24,6 @@ public class CategoryEntityRepositoryAdapter implements CategoryRepository {
         return r2dbcEntityTemplate.select(CategoryEntity.class)
                 .matching(Query.query(Criteria.where("id_category").is(id)))
                 .one()
-                .map(categoryEntity -> categoryEntity.toDomain());
+                .map(CategoryEntity::toDomain);
     }
 }

@@ -1,5 +1,4 @@
 package co.com.bancolombia.api.dto.request;
-
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;

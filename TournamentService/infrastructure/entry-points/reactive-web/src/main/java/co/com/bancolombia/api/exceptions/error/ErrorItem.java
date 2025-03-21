@@ -1,6 +1,5 @@
 package co.com.bancolombia.api.exceptions.error;
 
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -13,6 +12,5 @@ import lombok.ToString;
 @Builder
 @ToString
 public class ErrorItem {
-  //  private String code;
     private String detail;
 }

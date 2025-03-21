@@ -1,10 +1,9 @@
 package co.com.bancolombia.usecase.tournament;
-
 import co.com.bancolombia.model.category.gateways.CategoryRepository;
-import co.com.bancolombia.model.enums.AdminRole;
 import co.com.bancolombia.model.enums.TournamentStatus;
 import co.com.bancolombia.model.events.gateways.EventsGateway;
 import co.com.bancolombia.model.exceptions.BusinessException;
+import co.com.bancolombia.model.exceptions.TechnicalException;
 import co.com.bancolombia.model.exceptions.message.ErrorMessage;
 import co.com.bancolombia.model.gametype.gateways.GameTypesRepository;
 import co.com.bancolombia.model.tournament.Tournament;
@@ -15,11 +14,8 @@ import co.com.bancolombia.model.tournamentstage.TournamentStage;
 import co.com.bancolombia.model.tournamentstage.gateways.TournamentStageRepository;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
-
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 public class CreateTournamentUseCase {
@@ -42,12 +38,13 @@ public class CreateTournamentUseCase {
                         .thenReturn(savedTournament))
                 .flatMap(savedTournament -> {
                     if (TournamentStatus.PUBLICADO.equals(savedTournament.getStatus()) && tournament.getStages() != null && !tournament.getStages().isEmpty()) {
-                        return eventsGateway.emit(savedTournament)
+                        return eventsGateway.emit(savedTournament.getId())
                                 .thenReturn(savedTournament);
                     } else {
                         return Mono.just(savedTournament);
                     }
-                });
+                })
+                .switchIfEmpty(Mono.error(new TechnicalException(ErrorMessage.EXTERNAL_MESSAGE_ERROR)));
     }
 
     private Mono<Tournament> validateTournament(Tournament tournament) {
@@ -92,7 +89,7 @@ public class CreateTournamentUseCase {
 
                     return tournamentAdminRepository.save(completeAdmin);
                 })
-                .collect(Collectors.toList());
+                .toList();
 
         // Ejecutar todas las operaciones en paralelo
         return Mono.when(adminMonos);
@@ -105,7 +102,6 @@ public class CreateTournamentUseCase {
             return Mono.empty();
         }
 
-        // Convertir cada administrador en la lista y guardarlos
         List<Mono<TournamentStage>> stagesMonos = tournament.getStages().stream()
                 .map(stage -> {
                     TournamentStage completeStage = stage.toBuilder()
@@ -124,9 +120,8 @@ public class CreateTournamentUseCase {
                             .build();
                     return tournamentStageRepository.save(completeStage);
                 })
-                .collect(Collectors.toList());
+                .toList();
 
-        // Ejecutar todas las operaciones en paralelo
         return Mono.when(stagesMonos);
     }
 

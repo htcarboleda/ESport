@@ -1,4 +1,4 @@
-package co.com.bancolombia.r2dbc.gameType;
+package co.com.bancolombia.r2dbc.gametype;
 
 import co.com.bancolombia.r2dbc.entities.GameTypeEntity;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;

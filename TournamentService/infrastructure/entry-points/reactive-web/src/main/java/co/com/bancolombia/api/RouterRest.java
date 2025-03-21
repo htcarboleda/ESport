@@ -25,7 +25,6 @@ public class RouterRest {
         return route(GET("/api/v1/tournaments"), handler::getTournaments)
                 .andRoute(POST("/api/v1/tournaments"), handler::createTournament)
                 .andRoute(GET("/api/v1/tournaments/{id}"), handler::getTournamentById)
-               // .and(route(GET(" /api/v1/tournaments/{id}:"), handler::getTournamentById))
                 .andRoute(
                         RequestPredicates.all(),
                         request -> filterRequests(request, handler::createTournament)

@@ -4,11 +4,8 @@ import co.com.bancolombia.model.user.User;
 import lombok.Builder;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-//import lombok.NoArgsConstructor;
-
 
 @Data
-//@NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
 public class TournamentAdmin {

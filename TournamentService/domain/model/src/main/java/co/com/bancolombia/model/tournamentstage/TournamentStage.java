@@ -2,18 +2,13 @@ package co.com.bancolombia.model.tournamentstage;
 import lombok.Builder;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
-//import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.LocalDate;
-import java.util.List;
 
 
 @Data
-//@NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
 public class TournamentStage {

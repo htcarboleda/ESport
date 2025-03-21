@@ -1,4 +1,4 @@
-package co.com.bancolombia.r2dbc.gameType;
+package co.com.bancolombia.r2dbc.gametype;
 
 import co.com.bancolombia.model.gametype.GameType;
 import co.com.bancolombia.r2dbc.entities.GameTypeEntity;
@@ -24,6 +24,6 @@ public class GameTypeEntityRepositoryAdapter implements GameTypesRepository {
         return r2dbcEntityTemplate.select(GameTypeEntity.class)
                 .matching(Query.query(Criteria.where("id_game_type").is(id)))
                 .one()
-                .map(gameTypeEntity -> gameTypeEntity.toDomain());
+                .map(GameTypeEntity::toDomain);
     }
 }

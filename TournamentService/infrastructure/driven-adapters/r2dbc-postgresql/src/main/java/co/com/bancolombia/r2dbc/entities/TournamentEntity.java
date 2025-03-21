@@ -63,12 +63,6 @@ public class TournamentEntity {
     @Column("fk_id_creator")
     private Integer creatorId;
 
-    @Column("created_at")
-    private LocalDateTime createdAt;
-
-    @Column("updated_at")
-    private LocalDateTime updatedAt;
-
 
     public Tournament toDomain(CategoryEntity categoryEntity, GameTypeEntity gameTypeEntity, UserEntity userEntity) {
         return Tournament.builder()
@@ -83,8 +77,6 @@ public class TournamentEntity {
                 .category(new Category(categoryEntity.getId(), categoryEntity.getDescription()))
                 .gameType(new GameType(gameTypeEntity.getId(), gameTypeEntity.getName()))
                 .creator(new User(userEntity.getId(), userEntity.getFullName()))
-                .createdAt(this.createdAt)
-                .updatedAt(this.updatedAt)
                 .build();
     }
 
@@ -104,8 +96,6 @@ public class TournamentEntity {
                 .isFree(tournament.getIsFree())
                 .status(tournament.getStatus())
                 .creatorId(tournament.getCreatorId())
-                .createdAt(tournament.getCreatedAt())
-                .updatedAt(tournament.getUpdatedAt())
                 .build();
     }
 

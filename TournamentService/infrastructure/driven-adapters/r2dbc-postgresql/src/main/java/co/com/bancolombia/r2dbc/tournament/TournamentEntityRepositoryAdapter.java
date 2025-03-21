@@ -22,6 +22,9 @@ public class TournamentEntityRepositoryAdapter implements TournamentRepository {
 
     private final R2dbcEntityTemplate r2dbcEntityTemplate;
     private final TournamentEntityRepository tournamentEntityRepository;
+    public static final String CATEGORY = "id_category";
+    public static final String GAMETIME = "id_game_type";
+    public static final String USER = "id_user";
 
     public Flux<Tournament> findAllPaged(int page, int size, Integer category, Integer gameType, Boolean isFree) {
 
@@ -37,16 +40,16 @@ public class TournamentEntityRepositoryAdapter implements TournamentRepository {
             criteria = criteria.and("is_free").is(isFree);
         }
 
-        Query query = Query.query(criteria).limit(size).offset(page * size);
+        Query query = Query.query(criteria).limit(size).offset((long)page * size);
 
         return r2dbcEntityTemplate.select(query,TournamentEntity.class)
                 .flatMap(tournamentEntity -> {
                     Mono<CategoryEntity> categoryEntityMono = r2dbcEntityTemplate.selectOne(
-                            Query.query(Criteria.where("id_category").is(tournamentEntity.getCategory())), CategoryEntity.class);
+                            Query.query(Criteria.where(CATEGORY).is(tournamentEntity.getCategory())), CategoryEntity.class);
                     Mono<GameTypeEntity> gameTypeEntityMono = r2dbcEntityTemplate.selectOne(
-                            Query.query(Criteria.where("id_game_type").is(tournamentEntity.getGameType())), GameTypeEntity.class);
+                            Query.query(Criteria.where(GAMETIME).is(tournamentEntity.getGameType())), GameTypeEntity.class);
                     Mono<UserEntity> userEntityMono = r2dbcEntityTemplate.selectOne(
-                            Query.query(Criteria.where("id_user").is(tournamentEntity.getCreatorId())), UserEntity.class);
+                            Query.query(Criteria.where(USER).is(tournamentEntity.getCreatorId())), UserEntity.class);
 
                     return Mono.zip(categoryEntityMono, gameTypeEntityMono, userEntityMono)
                             .map(tuple -> tournamentEntity.toDomain(tuple.getT1(), tuple.getT2(), tuple.getT3()));
@@ -59,11 +62,11 @@ public class TournamentEntityRepositoryAdapter implements TournamentRepository {
         return tournamentEntityRepository.save(TournamentEntity.fromDomain(tournament))
                 .flatMap(tournamentEntity -> {
                     Mono<CategoryEntity> categoryEntityMono = r2dbcEntityTemplate.selectOne(
-                            Query.query(Criteria.where("id_category").is(tournamentEntity.getCategory())), CategoryEntity.class);
+                            Query.query(Criteria.where(CATEGORY).is(tournamentEntity.getCategory())), CategoryEntity.class);
                     Mono<GameTypeEntity> gameTypeEntityMono = r2dbcEntityTemplate.selectOne(
-                            Query.query(Criteria.where("id_game_type").is(tournamentEntity.getGameType())), GameTypeEntity.class);
+                            Query.query(Criteria.where(GAMETIME).is(tournamentEntity.getGameType())), GameTypeEntity.class);
                     Mono<UserEntity> userEntityMono = r2dbcEntityTemplate.selectOne(
-                            Query.query(Criteria.where("id_user").is(tournamentEntity.getCreatorId())), UserEntity.class);
+                            Query.query(Criteria.where(USER).is(tournamentEntity.getCreatorId())), UserEntity.class);
 
                     return Mono.zip(categoryEntityMono, gameTypeEntityMono, userEntityMono)
                             .map(tuple -> tournamentEntity.toDomain(tuple.getT1(), tuple.getT2(), tuple.getT3()));
@@ -73,17 +76,16 @@ public class TournamentEntityRepositoryAdapter implements TournamentRepository {
 
     public Mono<Tournament> findById(Integer id) {
 
-
         return r2dbcEntityTemplate.select(TournamentEntity.class)
                 .matching(Query.query(Criteria.where("id_tournament").is(id)))
                 .one()
                 .flatMap(tournamentEntity -> {
                     Mono<CategoryEntity> categoryEntityMono = r2dbcEntityTemplate.selectOne(
-                            Query.query(Criteria.where("id_category").is(tournamentEntity.getCategory())), CategoryEntity.class);
+                            Query.query(Criteria.where(CATEGORY).is(tournamentEntity.getCategory())), CategoryEntity.class);
                     Mono<GameTypeEntity> gameTypeEntityMono = r2dbcEntityTemplate.selectOne(
-                            Query.query(Criteria.where("id_game_type").is(tournamentEntity.getGameType())), GameTypeEntity.class);
+                            Query.query(Criteria.where(GAMETIME).is(tournamentEntity.getGameType())), GameTypeEntity.class);
                     Mono<UserEntity> userEntityMono = r2dbcEntityTemplate.selectOne(
-                            Query.query(Criteria.where("id_user").is(tournamentEntity.getCreatorId())), UserEntity.class);
+                            Query.query(Criteria.where(USER).is(tournamentEntity.getCreatorId())), UserEntity.class);
 
                     return Mono.zip(categoryEntityMono, gameTypeEntityMono, userEntityMono)
                             .map(tuple -> tournamentEntity.toDomain(tuple.getT1(), tuple.getT2(), tuple.getT3()));

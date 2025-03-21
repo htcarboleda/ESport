@@ -1,4 +1,4 @@
-package co.com.bancolombia.r2dbc.tournamentStage;
+package co.com.bancolombia.r2dbc.tournamentstage;
 
 import co.com.bancolombia.r2dbc.entities.TournamentStageEntity;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;

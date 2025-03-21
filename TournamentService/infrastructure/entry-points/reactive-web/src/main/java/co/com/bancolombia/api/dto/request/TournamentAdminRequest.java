@@ -1,5 +1,4 @@
 package co.com.bancolombia.api.dto.request;
-
 import co.com.bancolombia.model.enums.AdminRole;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
