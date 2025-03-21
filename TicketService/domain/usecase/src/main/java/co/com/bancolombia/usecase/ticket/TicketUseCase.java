@@ -14,12 +14,10 @@ import java.util.logging.Logger;
 @RequiredArgsConstructor
 public class TicketUseCase {
 
-
     private static final Logger logger = Logger.getLogger(TicketUseCase.class.getName());
 
     private final TicketInventoryRepository ticketInventoryRepository;
     private final TournamentStageRepository tournamentStageRepository;
-
 
     public Mono<Void> createTicketsInventory(Integer idTournament) {
 
@@ -28,9 +26,9 @@ public class TicketUseCase {
                 .then();
     }
 
+    // Crear tipos de inventario para cada etapa
     private Mono<Void> createInventoryTicketsForStage(TournamentStage stage) {
 
-        // Crear tipos de inventario para cada etapa
         List<Mono<TicketInventory>> inventoryMonos = createInventoryTickets(stage);
 
         // Ejecutar todas las operaciones en paralelo
@@ -58,7 +56,7 @@ public class TicketUseCase {
             if (savedMono != null) {
                 inventories.add(savedMono);
             } else {
-                logger.warning("Repository returned null when saving paid participant inventory");
+                logger.warning("Valor null");
             }
         }
 
@@ -79,7 +77,7 @@ public class TicketUseCase {
             if (savedMono != null) {
                 inventories.add(savedMono);
             } else {
-                logger.warning("Repository returned null when saving paid participant inventory");
+                logger.warning("Valor null");
             }
         }
 
@@ -101,7 +99,7 @@ public class TicketUseCase {
             if (savedMono != null) {
                 inventories.add(savedMono);
             } else {
-                logger.warning("Repository returned null when saving paid participant inventory");
+                logger.warning("Valor null");
             }
         }
 
@@ -122,7 +120,7 @@ public class TicketUseCase {
             if (savedMono != null) {
                 inventories.add(savedMono);
             } else {
-                logger.warning("Repository returned null when saving paid participant inventory");
+                logger.warning("Valor null");
             }
         }
 

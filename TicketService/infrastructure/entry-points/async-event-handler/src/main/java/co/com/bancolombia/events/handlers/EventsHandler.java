@@ -6,7 +6,6 @@ import org.reactivecommons.api.domain.DomainEvent;
 import org.reactivecommons.async.impl.config.annotations.EnableEventListeners;
 import reactor.core.publisher.Mono;
 
-
 @AllArgsConstructor
 @EnableEventListeners
 public class EventsHandler {

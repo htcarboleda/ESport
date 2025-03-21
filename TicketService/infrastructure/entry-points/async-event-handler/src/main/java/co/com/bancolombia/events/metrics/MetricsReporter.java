@@ -10,7 +10,6 @@ import org.reactivecommons.async.commons.ext.CustomReporter;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-import java.time.Duration;
 
 @Service
 @AllArgsConstructor
@@ -24,7 +23,6 @@ public class MetricsReporter implements CustomReporter {
                         "exception", "", "type",
                         type, "operation", handlerPath,
                         "status", status);
-                  // .record(Duration.ofMillis(duration));
     }
 
     @Override
