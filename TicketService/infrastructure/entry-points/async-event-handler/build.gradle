@@ -1,0 +1,7 @@
+dependencies {
+    implementation project(':model')
+    implementation project(':usecase')
+    implementation 'org.reactivecommons:async-kafka-starter:5.2.3'
+    implementation 'org.springframework:spring-context'
+    implementation 'io.micrometer:micrometer-core'
+}
