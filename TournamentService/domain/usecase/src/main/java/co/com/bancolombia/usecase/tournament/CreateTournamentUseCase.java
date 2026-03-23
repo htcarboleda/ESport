@@ -2,6 +2,7 @@ package co.com.bancolombia.usecase.tournament;
 import co.com.bancolombia.model.category.gateways.CategoryRepository;
 import co.com.bancolombia.model.enums.TournamentStatus;
 import co.com.bancolombia.model.events.gateways.EventsGateway;
+import co.com.bancolombia.model.events.gateways.SnsEventGateway;
 import co.com.bancolombia.model.exceptions.BusinessException;
 import co.com.bancolombia.model.exceptions.TechnicalException;
 import co.com.bancolombia.model.exceptions.message.ErrorMessage;
@@ -28,6 +29,7 @@ public class CreateTournamentUseCase {
     private final TournamentAdminRepository tournamentAdminRepository;
     private final TournamentStageRepository tournamentStageRepository;
     private final EventsGateway eventsGateway;
+    private final SnsEventGateway snsEventGateway;
 
     public Mono<Tournament> create(Tournament tournament) {
         return validateTournament(tournament)
@@ -38,8 +40,10 @@ public class CreateTournamentUseCase {
                         .thenReturn(savedTournament))
                 .flatMap(savedTournament -> {
                     if (TournamentStatus.PUBLICADO.equals(savedTournament.getStatus()) && tournament.getStages() != null && !tournament.getStages().isEmpty()) {
-                        return eventsGateway.emit(savedTournament.getId())
+                        return publishEvents(tournament, savedTournament)
                                 .thenReturn(savedTournament);
+//                        return eventsGateway.emit(savedTournament.getId())
+//                                .thenReturn(savedTournament);
                     } else {
                         return Mono.just(savedTournament);
                     }
@@ -47,10 +51,43 @@ public class CreateTournamentUseCase {
                 .switchIfEmpty(Mono.error(new TechnicalException(ErrorMessage.EXTERNAL_MESSAGE_ERROR)));
     }
 
+    // ── NUEVO: publica al bus interno Y a SNS en paralelo ────────────
+    private Mono<Tournament> publishEvents(Tournament original, Tournament saved) {
+        boolean shouldPublish = TournamentStatus.PUBLICADO.equals(saved.getStatus())
+                && original.getStages() != null
+                && !original.getStages().isEmpty();
+
+        if (!shouldPublish) return Mono.just(saved);
+
+        // Publicar en RabbitMQ (local) — canal interno entre microservicios
+        Mono<Void> busEvent = eventsGateway.emit(saved.getId())
+                .doOnSuccess(v -> logger.info("[BUS] Evento emitido al bus interno tournamentId={}" +
+                        saved.getId()))
+                .onErrorResume(e -> {
+                    logger.warning("[BUS] Error en bus interno (no crítico): " + e.getMessage().toString());
+                    return Mono.empty();
+                });
+
+        // Publicar en SNS (AWS) — canal externo para integraciones
+        Mono<Void> snsEvent = snsEventGateway.publishTournamentCreated(saved)
+                .onErrorResume(e -> {
+                    Throwable cause = e.getCause() != null ? e.getCause() : e;
+                    logger.warning("[SNS] Fallo publicando a SNS (no crítico) tournamentId=" + saved.getId()
+                            + " | excepción: " + e.getClass().getSimpleName()
+                            + " | mensaje: " + e.getMessage()
+                            + " | causa raíz: " + cause.getClass().getSimpleName() + ": " + cause.getMessage());
+                    return Mono.empty();
+                });
+
+        // Ejecutar ambos en paralelo — cada uno maneja sus propios errores
+        return Mono.when(busEvent, snsEvent).thenReturn(saved);
+    }
+
     private Mono<Tournament> validateTournament(Tournament tournament) {
         return Mono.just(tournament)
                 .flatMap(this::validateCategoryExists)
                 .flatMap(this::validateGameTypeExists);
+        // VALIDAR SI EL TORNEO YA EXISTE PARA LAS MISMAS FECHAS ASOCIADAS
     }
 
     private Mono<Tournament> validateCategoryExists(Tournament tournament) {
@@ -94,7 +131,6 @@ public class CreateTournamentUseCase {
         // Ejecutar todas las operaciones en paralelo
         return Mono.when(adminMonos);
     }
-
 
     private Mono<Void> createTournamentStages(Tournament tournament, Integer idTournament) {
 

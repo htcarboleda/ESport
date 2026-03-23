@@ -35,6 +35,8 @@ public class Tournament {
     private Integer creatorId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private Integer maxTicketsParticipation;
+    private Integer maxTicketsSpectator;
 
     private Category category;
     private GameType gameType;

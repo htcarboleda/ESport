@@ -1,0 +1,36 @@
+# application-aws.yml — Tournament Service (AWS real con free tier)
+spring:
+  config:
+    activate:
+      on-profile: aws
+
+# ── RDS PostgreSQL en AWS ─────────────────────────────────────────
+r2dbc:
+  host: ${RDS_HOST}         # endpoint de RDS desde AWS Console
+  port: 5432
+  database: ${esport_database}
+  username: ${RDS_USER}
+  password: ${RDS_PASS}
+
+# ── AWS real (sin endpoint override → apunta a AWS directamente) ──
+aws:
+  sns:
+    tournament-events-arn: ${AWS_SNS_TOURNAMENT_ARN}
+  region: us-east-1
+  endpoint:   ''             # vacío = AWS real
+
+spring.cloud.aws:
+  credentials:
+    instance-profile: true   # usa el rol IAM del EC2/ECS directamente
+  region:
+    static: us-east-1
+
+# ── RabbitMQ en EC2 ──────────────────────────────────────────────
+#app:
+#  async:
+#    rabbit-mq:
+#     host: ${RABBITMQ_HOST}
+#      port: 5672
+#      username: ${RABBITMQ_USER}
+#     password: ${RABBITMQ_PASS}
+#     virtual-host: /

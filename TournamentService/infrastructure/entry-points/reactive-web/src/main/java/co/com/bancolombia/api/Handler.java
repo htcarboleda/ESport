@@ -34,6 +34,16 @@ public class Handler {
     public static final String NOT_FOUND = "Unknown";
     public static final String ERROR = "Error en la Petición";
 
+    public Mono<ServerResponse> prueba(ServerRequest serverRequest) {
+        log.info("**************************Prueba");
+        return ServerResponse.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue("Hola")
+                .doOnError(e -> log.error(ERROR, e));
+    }
+
+
+
     public Mono<ServerResponse> getTournaments(ServerRequest serverRequest) {
 
         return serverRequest.bodyToMono(TournamentsFilterRequest.class)
@@ -111,6 +121,8 @@ public class Handler {
                 .format(rs.getFormat())
                 .isFree(rs.getIsFree())
                 .status(rs.getStatus())
+                .maxTicketsParticipation(rs.getMaxTicketsParticipation())
+                .maxTicketsSpectator(rs.getMaxTicketsSpectator())
                 .creatorId(1)
                 .admins(rs.getAdditionalAdmins() != null ?
                         rs.getAdditionalAdmins().stream()

@@ -24,6 +24,7 @@ public class RouterRest {
     public RouterFunction<ServerResponse> routerFunction(Handler handler) {
         return route(GET("/api/v1/tournaments"), handler::getTournaments)
                 .andRoute(POST("/api/v1/tournaments"), handler::createTournament)
+                .andRoute(POST("/api/v1/prueba"), handler::prueba)
                 .andRoute(GET("/api/v1/tournaments/{id}"), handler::getTournamentById)
                 .andRoute(
                         RequestPredicates.all(),

@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 9097
 spring:
   application:
     name: "TournamentService"
@@ -10,6 +10,7 @@ spring:
       enabled: true
       path: "/h2"
   profiles:
+    active: local
     include: null
 management:
   endpoints:
@@ -23,11 +24,20 @@ management:
 cors:
   allowed-origins: "http://localhost:4200,http://localhost:8080"
 r2dbc:
-  host: localhost
-  port: 5432
-  database: esport_database
-  username: admin
-  password: password
+  host: ${DB_HOST:localhost}
+  port: ${DB_PORT:5432}
+  database: ${DB_NAME:esport_database}
+  username: ${DB_USER:admin}
+  password: ${DB_PASS:password}
+aws:
+  sns:
+    tournament-events-arn: ${AWS_SNS_TOURNAMENT_ARN:arn:aws:sns:us-east-1:000000000000:tournament-events}
+    region: us-east-1
+    endpoint: http://localhost:4566
+  dynamodb:
+    audit-table: esport-audit-trail
+  region: ${AWS_REGION:us-east-1}
+  endpoint: ${AWS_ENDPOINT_OVERRIDE:}   # vacío = usa AWS real
 logging:
   level:
     io.r2dbc: DEBUG

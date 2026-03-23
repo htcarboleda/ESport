@@ -2,6 +2,7 @@ package co.com.bancolombia.api.dto.request;
 import co.com.bancolombia.model.enums.TournamentFormat;
 import co.com.bancolombia.model.enums.TournamentStatus;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -49,10 +50,18 @@ public class TournamentCreateRequest {
     @NotNull(message = "El estado del torneo es obligatorio")
     private TournamentStatus status;
 
+    @NotNull(message = "Definir el máximo de tickets para participantes es obligatorio")
+    private Integer maxTicketsParticipation;
+
+    @NotNull(message = "Definir el máximo de tickets para espectadores es obligatorio")
+    private Integer maxTicketsSpectator;
+
     // Lista de administradores
+    @Valid
     private List<TournamentAdminRequest> additionalAdmins;
 
     // Lista de etapas
+    @Valid
     private List<TournamentStages> stages;
 
     @AssertTrue(message = "La fecha de fin debe ser igual o posterior a la fecha de inicio")

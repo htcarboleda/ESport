@@ -23,3 +23,5 @@ include ':constant'
 project(':constant').projectDir = file('./infrastructure/helpers/constant')
 include ':async-event-bus'
 project(':async-event-bus').projectDir = file('./infrastructure/driven-adapters/async-event-bus')
+include ':sns-event-publisher'
+project(':sns-event-publisher').projectDir = file('./infrastructure/driven-adapters/sns-event-publisher')

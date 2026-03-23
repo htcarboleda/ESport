@@ -60,6 +60,12 @@ public class TournamentEntity {
     @Column("status")
     private TournamentStatus status;
 
+    @Column("max_tickets_participation")
+    private Integer maxTicketsParticipation;
+
+    @Column("max_tickets_spectator")
+    private Integer maxTicketsSpectator;
+
     @Column("fk_id_creator")
     private Integer creatorId;
 
@@ -74,13 +80,13 @@ public class TournamentEntity {
                 .format(this.format)
                 .isFree(this.isFree)
                 .status(this.status)
+                .maxTicketsSpectator(this.maxTicketsSpectator)
+                .maxTicketsParticipation(this.maxTicketsParticipation)
                 .category(new Category(categoryEntity.getId(), categoryEntity.getDescription()))
                 .gameType(new GameType(gameTypeEntity.getId(), gameTypeEntity.getName()))
                 .creator(new User(userEntity.getId(), userEntity.getFullName()))
                 .build();
     }
-
-
 
 
     public static TournamentEntity fromDomain(Tournament tournament) {
@@ -95,6 +101,8 @@ public class TournamentEntity {
                 .format(tournament.getFormat())
                 .isFree(tournament.getIsFree())
                 .status(tournament.getStatus())
+                .maxTicketsParticipation(tournament.getMaxTicketsParticipation())
+                .maxTicketsSpectator(tournament.getMaxTicketsSpectator())
                 .creatorId(tournament.getCreatorId())
                 .build();
     }
