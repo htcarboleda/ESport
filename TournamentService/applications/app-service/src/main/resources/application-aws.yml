@@ -6,11 +6,11 @@ spring:
 
 # ── RDS PostgreSQL en AWS ─────────────────────────────────────────
 r2dbc:
-  host: ${RDS_HOST}         # endpoint de RDS desde AWS Console
-  port: 5432
-  database: ${esport_database}
-  username: ${RDS_USER}
-  password: ${RDS_PASS}
+  host: ${DB_HOST}         # endpoint de RDS desde AWS Console
+  port: ${DB_PORT:5432}
+  database: ${DB_NAME}
+  username: ${DB_USER}
+  password: ${DB_PASS}
 
 # ── AWS real (sin endpoint override → apunta a AWS directamente) ──
 aws:
