@@ -1,0 +1,27 @@
+##Spring Configuration
+server:
+  port: 8085
+spring:
+  application:
+    name: TicketService
+  devtools:
+    add-properties: false
+  h2:
+    console:
+      enabled: true
+      path: /h2
+  profiles:
+    include: null
+cors:
+  allowed-origins: "http://localhost:4200,http://localhost:8085"
+r2dbc:
+  host: localhost
+  port: 5432
+  database: esport_database
+  username: admin
+  password: password
+logging:
+  level:
+    io.r2dbc: DEBUG
+    org.springframework.r2dbc: DEBUG
+    org.springframework.data.r2dbc: DEBUG
