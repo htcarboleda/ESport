@@ -1,0 +1,2497 @@
+openapi: 3.0.3
+info:
+  title: E-Sports Tournament Platform API
+  version: 1.0.0
+  description: API para la plataforma de torneos de videojuegos
+  contact:
+    name: API Support
+    email: support@esportstournament.com
+servers:
+  - url: https://esports.com/tournament/
+    description: Servidor de producción
+  - url: https://dev-esports.com/tournament/
+    description: Servidor de desarrollo
+tags:
+  - name: tournaments
+    description: Operaciones de torneos
+paths:
+  /api/v1/health:
+    head:
+      tags:
+      - Monitoring
+      responses:
+        200:
+          description: Respuesta exitosa.
+      operationId: healthOperation
+      summary: Metodo que permite monitorear la API
+
+  /api/v1/tournaments:
+    get:
+      tags:
+        - tournaments
+      summary: Obtener lista de torneos
+      description: Obtiene una lista paginada de torneos con opción de filtrado
+      operationId: getTournaments
+      parameters:
+        - name: page
+          in: query
+          description: Número de página
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+          
+        - name: size
+          in: query
+          description: Tamaño de la página
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+          
+        - name: category
+          in: query
+          description: categoría del torneo
+          schema:
+            type: string
+            minimum: 1
+            maximum: 250
+            
+        - name: gameType
+          in: query
+          description: tipo de juego del torneo
+          schema:
+            type: string
+            minimum: 1
+            maximum: 250
+       
+        - name: isFree
+          in: query
+          description: torneo pago o gratuito
+          schema:
+            type: boolean
+            
+        - name: status
+          in: query
+          description: Estado del torneo
+          schema:
+            $ref: '#/components/schemas/TournamentStatus'
+      responses:
+        '200':
+          description: Lista de torneos recuperada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedTournaments'
+        '400':
+          description: Parámetros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No autorizado
+        '500':
+          description: Error en el servidor
+    post:
+      tags:
+        - tournaments
+      summary: Crear un nuevo torneo
+      description: Crea un nuevo torneo con la información proporcionada
+      operationId: createTournament
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TournamentCreateRequest'
+      responses:
+        '201':
+          description: Torneo creado con éxito
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TournamentDetail'
+        '400':
+          description: Parámetros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No autorizado
+        '403':
+          description: Prohibido - Sin permisos suficientes
+        '409':
+          description: Conflicto - Límite de torneos gratuitos alcanzado
+        '500':
+          description: Error en el servidor
+                
+  /api/v1/tournaments/{id}:
+    get:
+      tags:
+        - tournaments
+      summary: Obtener detalles de un torneo
+      description: Obtiene información detallada de un torneo específico
+      operationId: getTournamentById
+      parameters:
+        - $ref: '#/components/parameters/idTournament'
+      responses:
+        '200':
+          description: Torneo encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TournamentDetail'
+        '400':
+          description: Parámetros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No autorizado
+        '404':
+          description: Torneo no encontrado
+        '500':
+          description: Error en el servidor
+    put:
+      tags:
+        - tournaments
+      summary: Actualizar un torneo
+      description: Actualiza la información de un torneo existente
+      operationId: updateTournament
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/idTournament'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TournamentUpdateRequest'
+      responses:
+        '200':
+          description: Torneo actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TournamentDetail'
+        '400':
+          description: Parámetros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No autorizado
+        '403':
+          description: Prohibido - Sin permisos suficientes
+        '404':
+          description: Torneo no encontrado
+        '500':
+          description: Error en el servidor
+    delete:
+      tags:
+        - tournaments
+      summary: Eliminar un torneo
+      description: Elimina un torneo existente
+      operationId: deleteTournament
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/idTournament'
+      responses:
+        '204':
+          description: Torneo eliminado correctamente
+        '400':
+          description: Parámetros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No autorizado
+        '403':
+          description: Prohibido - Sin permisos suficientes
+        '404':
+          description: Torneo no encontrado
+        '500':
+          description: Error en el servidor
+                
+  /api/v1/tournaments/{id}/publish:
+    post:
+      tags:
+        - tournaments
+      summary: Publicar un torneo
+      description: Cambiar estado de torneo a PUBLISHED
+      operationId: publishTournament
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/idTournament'
+      responses:
+        '200':
+          description: Torneo publicado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TournamentDetail'
+        '400':
+          description: Parámetros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No autorizado
+        '403':
+          description: Prohibido - Sin permisos suficientes
+        '404':
+          description: Torneo no encontrado
+        '409':
+          description: El torneo no puede ser publicado (estado inválido)
+        '500':
+          description: Error en el servidor
+                
+  /api/v1/tournaments/{id}/cancel:
+    post:
+      tags:
+        - tournaments
+      summary: Cancelar un torneo
+      description: Cambiar estado de torneo a CANCEL
+      operationId: cancelTournament
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/idTournament'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  description: Motivo de la cancelación
+                  minLength: 3
+                  maxLength: 250
+      responses:
+        '200':
+          description: Torneo cancelado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TournamentDetail'
+        '400':
+          description: Parámetros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No autorizado
+        '403':
+          description: Prohibido - Sin permisos suficientes
+        '404':
+          description: Torneo no encontrado
+        '409':
+          description: El torneo no puede ser cancelado (estado inválido)
+        '500':
+          description: Error en el servidor
+
+  /api/v1/tournaments/{id}/admins:
+    post:
+      tags:
+        - TournamentAdmins
+      summary: Agregar administrador a un torneo
+      description: Asigna un usuario como administrador del torneo
+      operationId: addTournamentAdmin
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/idTournament'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminAddRequest'
+      responses:
+        '201':
+          description: Administrador agregado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminDetail'
+        '400':
+          description: Parámetros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No autorizado
+        '403':
+          description: Prohibido - Sin permisos suficientes
+        '404':
+          description: No encontrado
+        '409':
+          description: Conflicto - Límite de administradores alcanzado
+        '500':
+          description: Error en el servidor
+    get:
+      tags:
+        - TournamentAdmins
+      summary: Listar administradores
+      description: Obtiene todos los administradores de un torneo
+      operationId: listTournamentAdmins
+      parameters:
+        - $ref: '#/components/parameters/idTournament'
+      responses:
+        '200':
+          description: Lista de administradores
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AdminDetail'
+        '400':
+          description: Parámetros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: No encontrado
+        '500':
+          description: Error en el servidor
+
+  /api/v1/tournaments/{id}/admins/{adminId}:
+    put:
+      tags:
+        - TournamentAdmins
+      summary: Actualizar rol de administrador
+      description: Actualiza el rol de un administrador existente
+      operationId: updateTournamentAdmin
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/idTournament'
+        - $ref: '#/components/parameters/AdminIdTournament'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - role
+              properties:
+                role:
+                  type: string
+                  enum: [PROPIETARIO, ADMINISTRADOR, MODERADOR]
+      responses:
+        '200':
+          description: Administrador actualizado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminDetail'
+        '400':
+          description: Parámetros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No autorizado
+        '403':
+          description: Prohibido - Sin permisos suficientes
+        '404':
+          description: No encontrado
+        '500':
+          description: Error en el servidor
+
+    delete:
+      tags:
+        - TournamentAdmins
+      summary: Eliminar administrador
+      description: Elimina un administrador de un torneo
+      operationId: deleteTournamentAdmin
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/idTournament'
+        - $ref: '#/components/parameters/AdminIdTournament'
+      responses:
+        '204':
+          description: Administrador eliminado exitosamente
+        '400':
+          description: Parámetros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No autorizado
+        '403':
+          description: Prohibido - Sin permisos suficientes
+        '404':
+          description: No encontrado
+        '409':
+          description: No se puede eliminar el administrador principal
+        '500':
+          description: Error en el servidor
+
+  /api/v1/tournaments/{id}/teams:
+    post:
+      tags:
+        - Teams
+      summary: Crear equipo
+      description: Añade un nuevo equipo a un torneo
+      operationId: createTeam
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/idTournament'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamRequest'
+      responses:
+        '201':
+          description: Equipo creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamResponse'
+        '400':
+          description: Parámetros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No autorizado
+        '403':
+          description: Prohibido - Sin permisos suficientes
+        '404':
+          description: No encontrado
+        '500':
+          description: Error en el servidor
+    
+    get:
+      tags:
+        - Teams
+      summary: Listar equipos
+      description: Obtiene todos los equipos de un torneo
+      operationId: listTeams
+      parameters:
+        - $ref: '#/components/parameters/idTournament'
+      responses:
+        '200':
+          description: Lista de equipos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TeamResponse'
+        '400':
+          description: Parámetros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: No encontrado
+        '500':
+          description: Error en el servidor
+
+  /api/v1/tournaments/{id}/teams/{teamId}:
+    get:
+      tags:
+        - Teams
+      summary: Listar participantes de un Equipo
+      description: Obtiene todos los participantes de un equipo
+      operationId: listParticipantsTeam
+      parameters:
+        - $ref: '#/components/parameters/idTournament'
+        - $ref: '#/components/parameters/ParticipantsTeamId'
+      responses:
+        '200':
+          description: Lista de participantes por equipo
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ParticipantResponse'
+        '400':
+          description: Parámetros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: No encontrado
+        '500':
+          description: Error en el servidor
+
+  /api/v1/tournaments/{id}/participants:
+    post:
+      tags:
+        - Participants
+      summary: Crear Participante
+      description: Añade un nuevo participante
+      operationId: createParticipant
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/idTournament'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParticipantRequest'
+      responses:
+        '201':
+          description: Participante creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParticipantResponse'
+        '400':
+          description: Parámetros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No autorizado
+        '403':
+          description: Prohibido - Sin permisos suficientes
+        '404':
+          description: No encontrado
+        '500':
+          description: Error en el servidor
+    get:
+      tags:
+        - Participants
+      summary: Listar participants
+      description: Obtiene todos los participants de un torneo
+      operationId: listParticipants
+      parameters:
+        - $ref: '#/components/parameters/idTournament'
+      responses:
+        '200':
+          description: Lista de participantes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ParticipantResponse'
+        '400':
+          description: Parámetros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: No encontrado
+        '500':
+          description: Error en el servidor
+
+  /api/v1/tournaments/{id}/individualMatches:
+    post:
+      tags:
+        - Individual Matches
+      summary: Crear partida Individual
+      description: Añade una nueva partida a un torneo
+      operationId: createIndividualMatch
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/idTournament'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IndividualMatchRequest'
+      responses:
+        '201':
+          description: Partida creada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IndividualMatchResponse'
+        '400':
+          description: Parámetros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No autorizado
+        '403':
+          description: Prohibido - Sin permisos suficientes
+        '404':
+          description: No encontrado
+        '500':
+          description: Error en el servidor
+    get:
+      tags:
+        - Individual Matches
+      summary: Listar partidas
+      description: Obtiene todas las partidas de un torneo
+      operationId: listIndividualMatches
+      parameters:
+        - $ref: '#/components/parameters/idTournament'
+      responses:
+        '200':
+          description: Lista de partidas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IndividualMatchResponse'
+        '400':
+          description: Parámetros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: No encontrado
+        '500':
+          description: Error en el servidor
+
+  /api/v1/tournaments/{id}/individualMatches/{matchId}/results:
+    put:
+      tags:
+        - Individual Matches
+      summary: Actualizar Informacion de partida Individual
+      description: Actualizar Informacion de partida a un torneo
+      operationId: updateIndividualMatch
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/idTournament'
+        - $ref: '#/components/parameters/MatchesIdTournament'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IndividualMatchRequestUpdate'
+      responses:
+        '200':
+          description: Partida actualizada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IndividualMatchResponse'
+        '400':
+          description: Parámetros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No autorizado
+        '403':
+          description: Prohibido - Sin permisos suficientes
+        '404':
+          description: No encontrado
+        '500':
+          description: Error en el servidor
+
+
+  /api/v1/tournaments/{id}/groups:
+    post:
+      tags:
+        - Group
+      summary: Crear Grupo
+      description: Añadir grupos a los torneos
+      operationId: createGroup
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/idTournament'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupRequest'
+      responses:
+        '201':
+          description: Grupo creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupResponse'
+        '400':
+          description: Parámetros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No autorizado
+        '403':
+          description: Prohibido - Sin permisos suficientes
+        '404':
+          description: No encontrado
+        '500':
+          description: Error en el servidor
+    get:
+      tags:
+        - Group
+      summary: Listar Grupos
+      description: Obtiene todas los grupos de un torneo
+      operationId: listGroup
+      parameters:
+        - $ref: '#/components/parameters/idTournament'
+      responses:
+        '200':
+          description: Lista de grupos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GroupResponse'
+        '400':
+          description: Parámetros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: No encontrado
+        '500':
+          description: Error en el servidor
+
+  /api/v1/tournaments/{id}/groupMatches:
+    post:
+      tags:
+        - Group Matches
+      summary: Crear partida Grupo
+      description: Añade una nueva partida a un torneo
+      operationId: createGroupMatch
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/idTournament'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupMatchRequest'
+      responses:
+        '201':
+          description: Partida creada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupMatchResponse'
+        '400':
+          description: Parámetros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No autorizado
+        '403':
+          description: Prohibido - Sin permisos suficientes
+        '404':
+          description: No encontrado
+        '500':
+          description: Error en el servidor
+    get:
+      tags:
+        - Group Matches
+      summary: Listar partidas
+      description: Obtiene todas las partidas de un torneo
+      operationId: listGroupMatches
+      parameters:
+        - $ref: '#/components/parameters/idTournament'
+      responses:
+        '200':
+          description: Lista de partidas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GroupMatchResponse'
+        '400':
+          description: Parámetros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: No encontrado
+        '500':
+          description: Error en el servidor
+
+  /api/v1/tournaments/{id}/groupMatches/{matchId}/results:
+    put:
+      tags:
+        - Group Matches
+      summary: Actualizar Informacion de partida 
+      description: Actualizar Informacion de partida a un torneo
+      operationId: updateGroupMatches
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/idTournament'
+        - $ref: '#/components/parameters/MatchesIdTournament'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupMatchRequestUpdate'
+      responses:
+        '200':
+          description: Partida actualizada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupMatchResponse'
+        '400':
+          description: Parámetros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No autorizado
+        '403':
+          description: Prohibido - Sin permisos suficientes
+        '404':
+          description: No encontrado
+        '500':
+          description: Error en el servidor
+
+  /api/v1/tournaments/{id}/stages:
+    post:
+      tags:
+        - Stages
+      summary: Crear una etapa de venta
+      description: Añade una nueva etapa de venta a un torneo
+      operationId: createTournamentStage
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/idTournament'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StageRequest'
+      responses:
+        '201':
+          description: Etapa de venta creada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StageResponse'
+        '400':
+          description: Parámetros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No autorizado
+        '403':
+          description: Prohibido - Sin permisos suficientes
+        '404':
+          description: No encontrado
+        '409':
+          description: Conflicto con etapas existentes
+        '500':
+          description: Error en el servidor
+    get:
+      tags:
+        - Stages
+      summary: Listar etapas de venta
+      description: Obtiene todas las etapas de venta de un torneo
+      operationId: listTournamentStages
+      parameters:
+        - $ref: '#/components/parameters/idTournament'
+      responses:
+        '200':
+          description: Lista de etapas de venta
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StageResponse'
+        '400':
+          description: Parámetros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: No encontrado
+        '500':
+          description: Error en el servidor
+
+  /api/v1/tournaments/{id}/stages/{stageId}:
+    put:
+      tags:
+        - Stages
+      summary: Actualizar etapa de venta
+      description: Actualiza la información de una etapa de venta existente
+      operationId: updateTournamentStage
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/idTournament'
+        - $ref: '#/components/parameters/StageidTournament'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StageRequest'
+      responses:
+        '200':
+          description: Etapa de venta actualizada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StageResponse'
+        '400':
+          description: Parámetros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No autorizado
+        '403':
+          description: Prohibido - Sin permisos suficientes
+        '404':
+          description: No encontrado
+        '409':
+          description: Conflicto con etapas existentes
+        '500':
+          description: Error en el servidor
+
+    delete:
+      tags:
+        - Stages
+      summary: Eliminar etapa de venta
+      description: Elimina una etapa de venta existente
+      operationId: deleteTournamentStage
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/idTournament'
+        - $ref: '#/components/parameters/StageidTournament'
+      responses:
+        '204':
+          description: Etapa de venta eliminada exitosamente
+        '400':
+          description: Parámetros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No autorizado
+        '403':
+          description: Prohibido - Sin permisos suficientes
+        '404':
+          description: No encontrado
+        '409':
+          description: No se puede eliminar la etapa si ya se han vendido tickets
+        '500':
+          description: Error en el servidor
+  
+  /api/v1/tournaments/{id}/awards:
+    post:
+      tags:
+        - Awards
+      summary: Crear premio
+      description: Añade un nuevo premio a un torneo
+      operationId: createAward
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/idTournament'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AwardRequest'
+      responses:
+        '201':
+          description: Premio creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AwardResponse'
+        '400':
+          description: Parámetros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No autorizado
+        '403':
+          description: Prohibido - Sin permisos suficientes
+        '404':
+          description: No encontrado
+        '500':
+          description: Error en el servidor
+    get:
+      tags:
+        - Awards
+      summary: Listar premios
+      description: Obtiene todos los premios de un torneo
+      operationId: listAwards
+      parameters:
+        - $ref: '#/components/parameters/idTournament'
+      responses:
+        '200':
+          description: Lista de premios
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AwardResponse'
+        '400':
+          description: Parámetros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: No encontrado
+        '500':
+          description: Error en el servidor
+
+  /api/v1/tournaments/{id}/streams:
+    post:
+      tags:
+        - Stream
+      summary: Crear stream
+      description: Añade stream a un torneo
+      operationId: createStream
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/idTournament'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StreamRequest'
+      responses:
+        '201':
+          description: Stream creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StreamResponse'
+        '400':
+          description: Parámetros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No autorizado
+        '403':
+          description: Prohibido - Sin permisos suficientes
+        '404':
+          description: No encontrado
+        '500':
+          description: Error en el servidor
+
+  /api/v1/tournaments/{id}/stream/{streamId}:
+    get:
+      tags:
+        - Stream
+      summary: Obtener detalles deL stream del torneo
+      description: Obtiene información detallada del stream de un torneo específico
+      operationId: getTournamentStream
+      parameters:
+        - $ref: '#/components/parameters/idTournament'
+        - $ref: '#/components/parameters/StreamIdTournament'
+      responses:
+        '200':
+          description: stream encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StreamResponse'
+        '400':
+          description: Parámetros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No autorizado
+        '404':
+          description: No encontrado
+        '500':
+          description: Error en el servidor
+    put:
+      tags:
+        - Stream
+      summary: Actualizar información de stream 
+      description: Actualizar información de stream
+      operationId: updateStream
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/idTournament'
+        - $ref: '#/components/parameters/StreamIdTournament'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StreamRequestUpdate'
+      responses:
+        '200':
+          description: Stream actualizado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StreamResponse'
+        '400':
+          description: Parámetros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No autorizado
+        '403':
+          description: Prohibido - Sin permisos suficientes
+        '404':
+          description: No encontrado
+        '500':
+          description: Error en el servidor
+
+  /api/v1/tournaments/{id}/matches/{matchId}/brackets:
+    post:
+      tags:
+        - Brackets
+      summary: Crear registro de Eliminacion
+      description: Añade registro de Eliminacion
+      operationId: createBrackets
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/idTournament'
+        - $ref: '#/components/parameters/MatchesIdTournament'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BracketsRequest'
+      responses:
+        '201':
+          description: Registro creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BracketsResponse'
+        '400':
+          description: Parámetros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No autorizado
+        '403':
+          description: Prohibido - Sin permisos suficientes
+        '404':
+          description: No encontrado
+        '500':
+          description: Error en el servidor
+
+  /api/v1/tournaments/{id}/battleRoyaleRounds:
+    post:
+      tags:
+        - BattleRoyaleRounds
+      summary: Se almacena cada ronda de eliminación
+      description: Se almacena cada ronda de eliminación para modos tipo Battle Royale
+      operationId: createBattleRoyaleRounds
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/idTournament'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BattleRoyaleRoundsRequest'
+      responses:
+        '201':
+          description: Registro creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BattleRoyaleRoundsResponse'
+        '400':
+          description: Parámetros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No autorizado
+        '403':
+          description: Prohibido - Sin permisos suficientes
+        '404':
+          description: No encontrado
+        '500':
+          description: Error en el servidor
+
+  /api/v1/tournaments/{id}/standings:
+    post:
+      tags:
+        - Standings
+      summary: Se almacena cada ronda de Clasificación 
+      description: Se almacena cada ronda de Clasificación, para Round Robin, Swiss y Fase de Grupos.
+      operationId: createStandings
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/idTournament'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StandingsRequest'
+      responses:
+        '201':
+          description: Registro creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandingsResponse'
+        '400':
+          description: Parámetros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No autorizado
+        '403':
+          description: Prohibido - Sin permisos suficientes
+        '404':
+          description: No encontrado
+        '500':
+          description: Error en el servidor
+
+security:
+  - bearerAuth: []  
+  
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT Authentication token. 
+        Ejemplo: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      
+  parameters:
+    idTournament:
+      name: id
+      in: path
+      description: ID del torneo
+      required: true
+      schema:
+        type: integer
+        example: 1
+        
+    StageidTournament:
+      name: stageId
+      in: path
+      description: ID de la etapa
+      required: true
+      schema:
+        type: integer
+        example: 1
+        
+    AdminIdTournament:
+      name: adminId
+      in: path
+      description: ID del administrador
+      required: true
+      schema:
+        type: integer
+        example: 1
+
+    ParticipantsTeamId:
+      name: teamId
+      in: path
+      description: ID del equipo
+      required: true
+      schema:
+        type: integer
+        example: 1
+
+    MatchesIdTournament:
+      name: matchId
+      in: path
+      description: ID del matches
+      required: true
+      schema:
+        type: integer
+        example: 1
+        
+    StreamIdTournament:
+      name: streamId
+      in: path
+      description: ID del stream
+      required: true
+      schema:
+        type: integer
+        example: 1
+
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: Código de error HTTP
+          example: 400
+        message:
+          type: string
+          description: Descripción del error
+          example: Parámetros de consulta inválidos
+        details:
+          type: array
+          description: Lista de errores detallados (opcional)
+          items:
+            type: string
+          example: [El parámetro 'size' debe ser un número entero positivo]  
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: id de la categoria
+          example: 1
+        code:
+          type: string
+          maxLength: 5
+          description: codigo de identificacion unico de la categoria
+          example: 12345
+        alias:
+          type: string
+          minLength: 3
+          maxLength: 10
+          description: alias de como identificar la categoria
+          example: RTS
+        description:
+          type: string
+          minLength: 3
+          maxLength: 250
+          description: descripcion de la categoria 
+          example:  Estrategia en Tiempo Real
+      xml:
+        name: category
+    GameType:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: id del tipo de juego
+          example: 15
+        code:
+          type: string
+          maxLength: 5
+          description: codigo de identificacion unico del tipo de juego
+          example: 12345
+        name:
+          type: string
+          minLength: 3
+          maxLength: 250
+          description: nombre del tipo de juego
+          example: MOBA
+        maxPlayer:
+          type: integer
+          format: int64
+          description: maximos de jugadores
+          example: 10
+      xml:
+        name: gameType
+    User:
+      type: object
+      properties:
+        email:
+          type: string
+          minLength: 3
+          maxLength: 255
+          example: prueba@gmail.com
+        fullName:
+          type: string
+          minLength: 3
+          maxLength: 255
+          example: Jose Emilino Perez
+        isActive:
+          type: integer
+          format: int64
+          example: 10
+      xml:
+        name: user
+    PagedTournaments:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tournaments'
+        totalItems:
+          type: integer
+          example: 100
+        totalPages:
+          type: integer
+          example: 10
+        currentPage:
+          type: integer
+          example: 1
+ 
+    TournamentStatus:
+      type: string
+      description: posibles estatus que puede tener un torneo
+      enum: [BORRADOR, PROXIMO, PUBLICADO, ACTIVO, FINALIZADO, CANCELADO]
+    Tournaments:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: id del torneo
+          example:  10
+        name:
+          type: string
+          minLength: 3
+          maxLength: 255
+          description: nombre del torneo
+          example: Campeonato mundial de League of Legends
+        category:
+          $ref: '#/components/schemas/Category'
+        gameType:
+          $ref: '#/components/schemas/GameType'
+        startDate:
+          type: string
+          format: date
+          description: Fecha de inicio del torneo (YYYY-MM-DD)
+          example: 2025-02-01
+        endDate:
+          type: string
+          format: date
+          description: Fecha de finalización del torneo (YYYY-MM-DD)
+          example:  2025-02-03
+        isFree:
+          type: boolean
+          description: Es gratis o pago para visualizar el torneo
+          example:  TRUE
+        status:
+          $ref: '#/components/schemas/TournamentStatus'
+      xml:
+        name: tournaments
+    TournamentDetail:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 255
+          description: nombre del torneo
+          example: Campeonato mundial de League of Legends
+        category:
+          $ref: '#/components/schemas/Category'
+        gameType:
+          $ref: '#/components/schemas/GameType'
+        startDate:
+          type: string
+          format: date
+          description: Fecha de inicio del torneo (YYYY-MM-DD)
+          example: 2025-02-01
+        endDate:
+          type: string
+          format: date
+          description: Fecha de finalización del torneo (YYYY-MM-DD)
+          example:  2025-02-10
+        isFree:
+          type: boolean
+          description: Es gratis o pago para visualizar el torneo
+          example:  TRUE
+        freeCapacity:
+          type: integer
+          description: Capacidad de suscripciones gratis (Visualizar)
+          example:  10
+        viewerLimit:
+          type: integer
+          description: Limite de suscriptores Total  (Visualizar)
+          example:  1000
+        status:
+          $ref: '#/components/schemas/TournamentStatus'
+        ticketsSee:
+          type: boolean
+          description: Habilitar venta de tickets para visualizar torneo 
+          example: true
+        ticketsParticipate:
+          type: boolean
+          description: Habilitar venta de tickets para participar en el torneo
+          example: true
+        userAdmin:
+          $ref: '#/components/schemas/AdminDetail'
+        userCreated:
+          $ref: '#/components/schemas/User'
+        createdAt:
+          type: string
+          format: date-time
+          description: Fecha de inicio del torneo (YYYY-MM-DDTHH:MM:SS.00Z)
+          example: 2025-02-01T06:00:00Z
+        updatedAt:
+          type: string
+          format: date-time
+          description: Fecha de inicio del torneo (YYYY-MM-DDTHH:MM:SS.00Z)
+          example: 2025-02-01T06:00:00Z
+      xml:
+        name: tournament
+    TournamentCreateRequest:
+      type: object
+      required:
+        - category
+        - gameType
+        - name
+        - startDate
+        - endDate
+        - isFree
+        - status
+        - ticketsSee
+        - ticketsParticipate
+      properties:
+        category:
+          type: integer
+          description: id de la categoria seleccionada
+          example: 1
+        gameType:
+          type: integer
+          description: id del tipo de juego seleccionada
+          example: 15
+        name:
+          type: string
+          minLength: 3
+          maxLength: 255
+          description: Nombre del torneo
+          example: Campeonato mundial de League of Legends
+        startDate:
+          type: string
+          format: date
+          description: Fecha de inicio del torneo (YYYY-MM-DD)
+          example:  2025-03-15
+        endDate:
+          type: string
+          format: date
+          description: Fecha de finalización del torneo (YYYY-MM-DD)
+          example:  2025-03-30
+        isFree:
+          type: boolean
+          description: Es gratis o pago para visualizar el torneo
+          example: false
+        freeCapacity:
+          type: integer
+          description: cantidad de cupos gratis para la visualizacion del torneo
+          example: 50
+        viewerLimit:
+          type: integer
+          description: limite maximo de personas que se visualiza 
+          example: 1000
+        status:
+          $ref: '#/components/schemas/TournamentStatus'
+        ticketsSee:
+          type: boolean
+          description: Habilitar venta de tickets para visualizar torneo 
+          example: true
+        ticketsParticipate:
+          type: boolean
+          description: Habilitar venta de tickets para participar en el torneo
+          example: true
+    TournamentUpdateRequest:
+      type: object
+      required:
+        - category
+        - gameType
+        - name
+        - startDate
+        - endDate
+        - isFree
+        - status
+        - ticketsSee
+        - ticketsParticipate
+      properties:
+        category:
+          type: integer
+          description: id de la categoria seleccionada
+          example: 1
+        gameType:
+          type: integer
+          description: id del tipo de juego seleccionada
+          example: 15
+        name:
+          type: string
+          minLength: 3
+          maxLength: 255
+          description: Nombre del torneo
+          example: Campeonato mundial de League of Legends
+        startDate:
+          type: string
+          format: date
+          description: Fecha de inicio del torneo (YYYY-MM-DD)
+          example:  2025-03-15
+        endDate:
+          type: string
+          format: date
+          description: Fecha de finalización del torneo (YYYY-MM-DD)
+          example:  2025-03-30
+        isFree:
+          type: boolean
+          description: Es gratis o pago para visualizar el torneo
+          example: false
+        freeCapacity:
+          type: integer
+          description: cantidad de cupos gratis para la visualizacion del torneo
+          example: 50
+        viewerLimit:
+          type: integer
+          description: limite maximo de personas que se visualiza 
+          example: 1000
+        status:
+          $ref: '#/components/schemas/TournamentStatus'
+        ticketsSee:
+          type: boolean
+          description: Habilitar venta de tickets para visualizar torneo 
+          example: true
+        ticketsParticipate:
+          type: boolean
+          description: Habilitar venta de tickets para participar en el torneo
+          example: true
+
+    AdminAddRequest: 
+      type: object
+      required:
+        - idUser
+        - idTournament
+        - role
+      properties:
+        idUser:
+          type: integer
+          description: id del usuario 
+          example: 1
+        idTournament:
+          type: integer
+          description: id del torneo 
+          example: 1
+        role:
+          type: string
+          description: rol del usuario ante el torneo
+          enum: [PROPIETARIO, ADMINISTRADOR, MODERADOR]
+          example: PROPIETARIO
+      xml:
+        name: adminAddRequest
+   
+    AdminDetail:
+      type: object
+      properties:
+        idTournament:
+          type: integer
+          description: ID del torneo 
+          example: 1
+        idUser:
+          type: integer
+          description: ID del usuario asignado
+          example: 123
+        role:
+          type: string
+          description: rol del usuario ante el torneo
+          enum: [PROPIETARIO, ADMINISTRADOR, MODERADOR]
+          example: PROPIETARIO
+        createdAt:
+          type: string
+          format: date-time
+          description: Fecha y hora en que se asigno
+          example: 2025-03-04T12:30:00Z    
+        updatedAt:
+          type: string
+          format: date-time
+          description: Fecha y hora en que se modifico
+          example: 2025-03-07T12:30:00Z    
+
+    TeamRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 255
+          description: Nombre completo del equipo
+    TeamResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: ID único del equipo
+        idTournament:
+          type: integer
+          format: int64
+          description: ID del torneo asociado
+        name:
+          type: string
+          minLength: 3
+          maxLength: 255
+          description: Nombre completo del equipo
+        players:
+          type: array
+          items:
+            type: object
+            properties:
+              idUser:
+                type: integer
+                format: int64
+                description: ID del usuario que es jugador
+              fullName:
+                type: string
+                minLength: 3
+                maxLength: 255
+                description: Nombre de usuario del jugador
+
+    ParticipantRequest:
+      type: object
+      required:
+        - idUser
+      properties:
+        idUser:
+          type: integer
+          format: int64
+          description: ID del usuario que es el Jugador
+        teamId:
+          type: integer
+          format: int64
+          description: ID del equipo del jugador en caso que sea por equipos
+    ParticipantResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: ID único del participante
+        idTournament:
+          type: integer
+          format: int64
+          description: ID del torneo asociado
+        player:
+          type: object
+          properties:
+            idUser:
+              type: integer
+              format: int64
+              description: ID del usuario que es jugador
+            fullName:
+              type: string
+              minLength: 3
+              maxLength: 255
+              description: Nombre de usuario del jugador
+        teamId:
+          type: integer
+          format: int64
+          description: ID equipo del participant
+        nameTeam:
+          type: string
+          description: Nombre del equipo que pertenece el jugador
+
+    IndividualMatchRequest:
+      type: object
+      required:
+        - round
+        - participantA
+        - participantB
+      properties:
+        round:
+          type: integer
+          format: int64
+          description: round de la Jugada
+        participantA:
+          type: integer
+          format: int64
+          description: Participante A del torneo
+        participantB:
+          type: integer
+          format: int64
+          description: Participante B del torneo
+    IndividualMatchRequestUpdate:
+      type: object
+      required:
+        - round
+        - participantA
+        - participantB
+      properties:
+        round:
+          type: integer
+          format: int64
+          description: round de la Jugada
+        participantA:
+          type: integer
+          format: int64
+          description: Participante A del torneo
+        participantB:
+          type: integer
+          format: int64
+          description: Participante B del torneo
+        scoreA:
+          type: integer
+          format: int64
+          description: Puntaje del Participante A del torneo
+        scoreB:
+          type: integer
+          format: int64
+          description: Puntaje del Participante B del torneo
+        status:
+          type: string
+          description: Estado del Match
+          enum: [PROGRAMADA, PROGRESO, FINALIZADO]
+        winner:
+          type: integer
+          format: int64
+          description: Ganador
+    IndividualMatchResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: ID único del participante
+        idTournament:
+          type: integer
+          format: int64
+          description: ID del torneo asociado
+        round:
+          type: integer
+          format: int64
+          description: round de la Jugada
+        participantA:
+          type: integer
+          format: int64
+          description: Participante A del torneo
+        participantB:
+          type: integer
+          format: int64
+          description: Participante B del torneo
+        scoreA:
+          type: integer
+          format: int64
+          description: Puntaje del Participante A del torneo
+        scoreB:
+          type: integer
+          format: int64
+          description: Puntaje del Participante B del torneo
+        status:
+          type: string
+          description: Estado del Match
+          enum: [PROGRAMADA, PROGRESO, FINALIZADO]
+        winner:
+          type: integer
+          format: int64
+          description: Ganador
+        createdAt:
+          type: string
+          format: date-time
+          description: Fecha y hora en que se creo
+          example: 2025-03-04T12:30:00Z    
+        updatedAt:
+          type: string
+          format: date-time
+          description: Fecha y hora en que se modifico
+          example: 2025-03-07T12:30:00Z  
+
+    GroupRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 100
+          description: Nombre del grupo
+          example: Grupo A
+    GroupResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: ID único del grupo
+          example: 1
+        idTournament:
+          type: integer
+          format: int64
+          description: ID del grupo
+          example: 1
+        name:
+          type: string
+          minLength: 3
+          maxLength: 100
+          description: Nombre del grupo
+          example: Grupo A
+        createdAt:
+          type: string
+          format: date-time
+          description: Fecha y hora en que se creo
+          example: 2025-03-04T12:30:00Z
+
+    GroupMatchRequest:
+      type: object
+      required:
+        - idGroup
+        - round
+        - teamA
+        - teamB
+      properties:
+        idGroup:
+          type: integer
+          format: int64
+          description: id del grupo
+        round:
+          type: integer
+          format: int64
+          description: round de la Jugada
+        teamA:
+          type: integer
+          format: int64
+          description: Equipo A del torneo
+        teamB:
+          type: integer
+          format: int64
+          description: Equipo B del torneo
+    GroupMatchRequestUpdate:
+      type: object
+      required:
+        - idGroup
+        - round
+        - teamA
+        - teamB
+      properties:
+        idGroup:
+          type: integer
+          format: int64
+          description: id del grupo de la Partida
+        round:
+          type: integer
+          format: int64
+          description: round de la Partida
+        teamA:
+          type: integer
+          format: int64
+          description: Participante A de la Partida
+        teamB:
+          type: integer
+          format: int64
+          description: Participante B de la Partida
+        scoreA:
+          type: integer
+          format: int64
+          description: Puntaje Participante A de la Partida
+        scoreB:
+          type: integer
+          format: int64
+          description: Puntaje Participante B de la Partida
+        status:
+          type: string
+          description: Estado de la Partida
+          enum: [PROGRAMADA, PROGRESO, FINALIZADO]
+        winner:
+          type: integer
+          format: int64
+          description: Ganador de la Partida
+    GroupMatchResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: ID único de la Partida
+        idGroup:
+          type: integer
+          format: int64
+          description: grupo del torneo
+        round:
+          type: integer
+          format: int64
+          description: round de la Partida
+        teamA:
+          type: integer
+          format: int64
+          description: Participante A de la Partida
+        teamB:
+          type: integer
+          format: int64
+          description: Participante B de la Partida
+        scoreA:
+          type: integer
+          format: int64
+          description: Puntaje participante A de la Partida
+        scoreB:
+          type: integer
+          format: int64
+          description: Puntaje Participante B de la Partida
+        status:
+          type: string
+          description: Estado de la Partida
+          enum: [PROGRAMADA, PROGRESO, FINALIZADO]
+        winner:
+          type: integer
+          format: int64
+          description: Ganador de la Partida
+        createdAt:
+          type: string
+          format: date-time
+          description: Fecha y hora en que se creo
+          example: 2025-03-04T12:30:00Z    
+        updatedAt:
+          type: string
+          format: date-time
+          description: Fecha y hora en que se modifico
+          example: 2025-03-07T12:30:00Z  
+
+    StageRequest: 
+      type: object
+      required:
+        - name
+        - startDate
+        - endDate
+        - participantPrice
+        - spectatorPrice
+        - maxParticipantTickets
+        - maxSpectatorTickets
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 255
+          description: Nombre de la etapa de venta
+          example: Preventa
+        startDate:
+          type: string
+          format: date
+          description: Fecha de inicio del torneo (YYYY-MM-DD)
+          example:  2025-03-15
+        endDate:
+          type: string
+          format: date
+          description: Fecha de finalización del torneo (YYYY-MM-DD)
+          example:  2025-03-30
+        participantPrice:
+          type: number
+          format: double
+          minimum: 0
+          description: Precio de los tickets en esta etapa para Participantes
+        spectatorPrice:
+          type: number
+          format: double
+          minimum: 0
+          description: Precio de los tickets en esta etapa para Espectadores
+        maxParticipantTickets:
+          type: integer
+          description: Maximo de Tickets para Participantes
+          example: 1
+        maxSpectatorTickets:
+          type: integer
+          description: Maximo de Tickets para Espectadores
+          example: 1
+        freeParticipantSlots:
+          type: integer
+          description: Maximo de Tickets Gratis para Participantes
+          example: 1
+        paidParticipantSlots:
+          type: integer
+          description: Maximo de Tickets Pagos para Participantes
+          example: 1
+        freeSpectatorSlots:
+          type: integer
+          description: Maximo de Tickets Gratis para Espectadores
+          example: 1
+        paidSpectatorSlots:
+          type: integer
+          description: Maximo de Tickets Pagos para Espectadores
+          example: 1
+
+    StageResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: ID único de la etapa
+        idTournament:
+          type: integer
+          format: int64
+          description: ID del torneo asociado
+        name:
+          type: string
+          minLength: 3
+          maxLength: 255
+          description: Nombre de la etapa de venta
+        startDate:
+          type: string
+          format: date
+          description: Fecha de inicio del torneo (YYYY-MM-DD)
+          example:  2025-03-15
+        endDate:
+          type: string
+          format: date
+          description: Fecha de finalización del torneo (YYYY-MM-DD)
+          example:  2025-03-30
+        participantPrice:
+          type: number
+          format: double
+          minimum: 0
+          description: Precio de los tickets en esta etapa para Participantes
+        spectatorPrice:
+          type: number
+          format: double
+          minimum: 0
+          description: Precio de los tickets en esta etapa para Espectadores
+        maxParticipantTickets:
+          type: integer
+          description: Maximo de Tickets para Participantes
+          example: 1
+        maxSpectatorTickets:
+          type: integer
+          description: Maximo de Tickets para Espectadores
+          example: 1
+        freeParticipantSlots:
+          type: integer
+          description: Maximo de Tickets Gratis para Participantes
+          example: 1
+        paidParticipantSlots:
+          type: integer
+          description: Maximo de Tickets Pagos para Participantes
+          example: 1
+        freeSpectatorSlots:
+          type: integer
+          description: Maximo de Tickets Gratis para Espectadores
+          example: 1
+        paidSpectatorSlots:
+          type: integer
+          description: Maximo de Tickets Pagos para Espectadores
+          example: 1
+
+    AwardRequest:
+      type: object
+      required:
+        - description
+        - amount
+      properties:
+        description:
+          type: string
+          minLength: 3
+          maxLength: 100
+          description: Descripción del premio
+        amount:
+          type: number
+          format: double
+          minimum: 0
+          description: Monto del premio
+    AwardResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: ID único del premio
+        idTournament:
+          type: integer
+          format: int64
+          description: ID del torneo asociado
+        description:
+          type: string
+          minLength: 3
+          maxLength: 100
+          description: Descripción del premio
+        amount:
+          type: number
+          format: double
+          description: Monto del premio   
+
+    StreamRequest:
+      type: object
+      required:
+        - streamingId
+        - streamUrl
+        - accessType
+      properties:
+        streamingId:
+          type: integer
+          format: int64
+          description: id del Stream
+        streamUrl:
+          type: string
+          description: URL Stream
+        accessType:
+          type: string
+          enum: [FREE, PAID]
+        maxSpectators:
+          type: integer
+          format: int64
+          description: Maximo de espectadores
+    StreamRequestUpdate:
+      type: object
+      required:
+        - streamingId
+        - streamUrl
+        - accessType
+      properties:
+        streamingId:
+          type: integer
+          format: int64
+          description: id del Stream
+        streamUrl:
+          type: string
+          description: URL Stream
+        accessType:
+          type: string
+          enum: [FREE, PAID]
+        maxSpectators:
+          type: integer
+          format: int64
+          description: Maximo de espectadores
+    StreamResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: ID único del Streaming del torneo
+        idTournament:
+          type: integer
+          format: int64
+          description: ID del torneo asociado
+        idStreaming:
+          type: integer
+          format: int64
+          description: id del Stream
+        streamUrl:
+          type: string
+          description: URL Stream
+        accessType:
+          type: string
+          enum: [FREE, PAID]
+        maxSpectators:
+          type: integer
+          format: int64
+          description: Maximo de espectadores
+        createdAt:
+          type: string
+          format: date-time
+          description: Fecha y hora en que se creo
+          example: 2025-03-04T12:30:00Z    
+        updatedAt:
+          type: string
+          format: date-time
+          description: Fecha y hora en que se modifico
+          example: 2025-03-07T12:30:00Z 
+
+    BracketsRequest:
+      type: object
+      required:
+        - idTeamMatches
+        - round
+        - idNextMatch
+      properties:
+        idTeamMatches:
+          type: integer
+          format: int64
+          description: Id de la jugada
+        round:
+          type: integer
+          format: int64
+          description: Round
+        idNextMatch:
+          type: integer
+          format: int64
+          description: Proxima Jugada
+    BracketsResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: ID llave de eliminacion
+        idTournament:
+          type: integer
+          format: int64
+          description: ID del torneo asociado
+        idTeamMatches:
+          type: integer
+          format: int64
+          description: ID de la jugada
+        round:
+          type: integer
+          description: Round
+        idNextMatch:
+          type: integer
+          format: int64
+          description: Proxima Jugada 
+        createdAt:
+          type: string
+          format: date-time
+          description: Fecha y hora en que se creo
+          example: 2025-03-04T12:30:00Z    
+
+    BattleRoyaleRoundsRequest:
+      type: object
+      required:
+        - roundNumber
+        - eliminatedParticipant
+        - idNextMatch
+      properties:
+        roundNumber:
+          type: integer
+          format: int64
+          description: Round
+        eliminatedParticipant:
+          type: integer
+          format: int64
+          description: Participante eliminado
+        idNextMatch:
+          type: integer
+          format: int64
+          description: Proxima Jugada
+    BattleRoyaleRoundsResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: ID llave de eliminacion
+        idTournament:
+          type: integer
+          format: int64
+          description: ID del torneo asociado
+        roundNumber:
+          type: integer
+          format: int64
+          description: Round
+        eliminatedParticipant:
+          type: integer
+          description: Participante Eliminado
+        idNextMatch:
+          type: integer
+          format: int64
+          description: Proxima Jugada 
+        createdAt:
+          type: string
+          format: date-time
+          description: Fecha y hora en que se creo
+          example: 2025-03-04T12:30:00Z      
+
+    StandingsRequest:
+      type: object
+      required:
+        - idTeam
+      properties:
+        idTeam:
+          type: integer
+          format: int64
+          description: id del Equipo
+        wins:
+          type: integer
+          format: int64
+          description: Victorias
+        losses:
+          type: integer
+          format: int64
+          description: Derrotas
+        draws:
+          type: integer
+          format: int64
+          description: Empates
+        points:
+          type: integer
+          format: int64
+          description: Puntos
+    StandingsResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: ID llave de eliminacion
+        idTournament:
+          type: integer
+          format: int64
+          description: ID del torneo asociado
+        idTeam:
+          type: integer
+          format: int64
+          description: id Equipo
+        wins:
+          type: integer
+          format: int64
+          description: Victorias
+        losses:
+          type: integer
+          format: int64
+          description: Derrotas
+        draws:
+          type: integer
+          format: int64
+          description: Empates
+        points:
+          type: integer
+          format: int64
+          description: Puntos         

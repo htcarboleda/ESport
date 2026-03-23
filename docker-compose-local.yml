@@ -1,0 +1,106 @@
+services:
+
+  # ── INFRAESTRUCTURA ──────────────────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: esport_database
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+    ports: ['5432:5432']
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ['CMD-SHELL','pg_isready -U admin -d esport_database']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --requirepass redis_pass
+    ports: ['6379:6379']
+    healthcheck:
+      test: ['CMD','redis-cli','-a','redis_pass','ping']
+      interval: 10s
+      retries: 3
+
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: esport
+      RABBITMQ_DEFAULT_PASS: esport_pass
+    ports:
+      - '5672:5672'
+      - '15672:15672'   # UI → http://localhost:15672
+    healthcheck:
+      test: ['CMD','rabbitmq-diagnostics','ping']
+      interval: 15s  
+      timeout: 10s  
+      retries: 5
+
+  localstack:
+    image: localstack/localstack:3.0
+    environment:
+      SERVICES: sqs,sns,dynamodb,s3,logs
+      DEFAULT_REGION: us-east-1
+      AWS_DEFAULT_REGION: us-east-1
+      PERSISTENCE: 1
+    ports: ['4566:4566']
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./infra/localstack/init-aws.sh:/etc/localstack/init/ready.d/01_init.sh
+      - localstack_data:/var/lib/localstack
+    healthcheck:
+      test: ['CMD-SHELL','curl -f http://localhost:4566/_localstack/health || exit 1']
+      interval: 20s  
+      timeout: 10s  
+      retries: 5
+
+  # ── MICROSERVICIOS ───────────────────────────────────────────────
+  tournament-service:
+    build: ./tournament-service
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      DB_HOST: postgres
+      DB_NAME: esport_database
+      DB_USER: admin
+      DB_PASS: password
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_REGION: us-east-1
+      AWS_ENDPOINT_OVERRIDE: http://localstack:4566
+      AWS_SNS_TOURNAMENT_ARN: arn:aws:sns:us-east-1:000000000000:tournament-events
+    ports: ['9097:9097']
+    depends_on:
+      postgres:   {condition: service_healthy}
+      rabbitmq:   {condition: service_healthy}
+      localstack: {condition: service_healthy}
+    restart: on-failure
+
+  ticket-service:
+    build: ./ticket-service
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      DB_HOST: postgres
+      DB_NAME: esport_database
+      DB_USER: admin
+      DB_PASS: password
+      REDIS_HOST: redis
+      REDIS_PASS: redis_pass
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_REGION: us-east-1
+      AWS_ENDPOINT_OVERRIDE: http://localstack:4566
+      AWS_SQS_TICKET_URL: http://localstack:4566/000000000000/ticket-update-queue
+    ports: ['8085:8085']
+    depends_on:
+      postgres:   {condition: service_healthy}
+      rabbitmq:   {condition: service_healthy}
+      localstack: {condition: service_healthy}
+    restart: on-failure
+
+volumes:
+  postgres_data:
+  localstack_data:

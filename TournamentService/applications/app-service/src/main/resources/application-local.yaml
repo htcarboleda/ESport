@@ -1,0 +1,29 @@
+# application-local.yml — Tournament Service (Docker Compose / LocalStack)
+spring:
+  config:
+    activate:
+      on-profile: local
+  cloud:
+    aws:
+      credentials:
+        access-key: test
+        secret-key: test
+      region:
+        static: us-east-1
+      sns:
+        endpoint: http://localhost:4566
+
+# ── Override DB para Docker ───────────────────────────────────────
+r2dbc:
+  host: ${DB_HOST:localhost}
+  port: ${DB_PORT:5432}
+  database: ${DB_NAME:esport_database}
+  username: ${DB_USER:admin}
+  password: ${DB_PASS:password}
+
+# ── LocalStack simula AWS ─────────────────────────────────────────
+aws:
+  sns:
+    tournament-events-arn: arn:aws:sns:us-east-1:000000000000:tournament-events
+  region: us-east-1
+  endpoint: http://localhost:4566
