@@ -1,0 +1,28 @@
+spring:
+  config:
+    activate:
+      on-profile: aws
+
+r2dbc:
+  host: ${RDS_HOST}
+  username: ${RDS_USER}
+  password: ${RDS_PASS}
+
+aws:
+  endpoint: ""    # vacío = apunta a AWS real
+
+spring.cloud.aws:
+  credentials:
+    instance-profile: true    # usa el rol IAM del EC2/ECS
+  region:
+    static: us-east-1
+
+spring.data.redis:
+  host: ${ELASTICACHE_HOST}
+
+app:
+  async:
+    rabbit-mq:
+      host:     ${RABBITMQ_HOST}
+      username: ${RABBITMQ_USER}
+      password: ${RABBITMQ_PASS}

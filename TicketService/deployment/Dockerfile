@@ -1,7 +1,26 @@
-FROM eclipse-temurin:17-jdk-alpine
-VOLUME /tmp
-COPY *.jar TicketService.jar
-ENV JAVA_OPTS=" -Xshareclasses:name=cacheapp,cacheDir=/cache,nonfatal -XX:+UseContainerSupport -XX:MaxRAMPercentage=70 -Djava.security.egd=file:/dev/./urandom"
-# Replace with a non-root user to avoid running the container with excessive privileges
-USER appuser
-ENTRYPOINT [ "sh", "-c", "java $JAVA_OPTS  -jar TicketService.jar" ]
+# Dockerfile (en la raíz de cada servicio)
+
+# ── Stage 1: Build ───────────────────────────────────────────────
+FROM eclipse-temurin:21-jdk-alpine AS builder
+WORKDIR /app
+COPY gradlew build.gradle settings.gradle ./
+COPY gradle ./gradle
+RUN ./gradlew dependencies --no-daemon   # cachea dependencias
+COPY . .
+RUN ./gradlew bootJar --no-daemon -x test
+
+# ── Stage 2: Runtime (imagen mínima) ─────────────────────────────
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+
+# Usuario no-root por seguridad
+RUN addgroup -S esport && adduser -S esport -G esport
+USER esport
+
+COPY --from=builder /app/build/libs/*.jar app.jar
+
+EXPOSE 9097
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+    CMD wget -qO- http://localhost:9097/actuator/health || exit 1
+
+ENTRYPOINT ["java","-XX:+UseContainerSupport","-XX:MaxRAMPercentage=75","-jar","app.jar"]

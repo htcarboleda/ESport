@@ -26,4 +26,10 @@ public class TicketInventoryEntityRepositoryAdapter implements TicketInventoryRe
                 });
 
     }
+
+    @Override
+    public Mono<Boolean> existsByStageId(Integer stageId) {
+        return ticketInventoryEntityRepository.existsById(Long.valueOf(stageId));
+    }
+
 }
