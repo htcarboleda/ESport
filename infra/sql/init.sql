@@ -438,3 +438,7 @@ CREATE TABLE tickets_inventory (
     CONSTRAINT FK_inventario_tickets_id_tournament FOREIGN KEY (fk_id_tournament) REFERENCES tournaments(id_tournament),
     CONSTRAINT FK_tickets_inventory_id_stage  FOREIGN KEY (fk_id_stage ) REFERENCES tournament_stages (id_tournament_stage)
 );
+
+insert into categories (code, alias, description, max_free_participants) values ('123','Competitivo Amateur','jugadores no profesionales que buscan competir',1);
+insert into game_types (code, name, max_players) values ('456','Battle Royale',10);
+insert into users (full_name, email, username, password) VALUES ('Juan Pérez', 'juan.perez@ejemplo.com', 'jperez', 'pass');

@@ -1,0 +1,64 @@
+version: "3.8"
+services:
+ 
+  # RabbitMQ corre en Docker — NO usa AWS
+  # SQS/SNS/DynamoDB están en AWS real
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: esport-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD","rabbitmq-diagnostics","ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+ 
+  tournament-service:
+    build:
+      context: ../tournament-service
+      dockerfile: Dockerfile
+    container_name: esport-tournament
+    environment:
+      SPRING_PROFILES_ACTIVE: aws
+      DB_HOST: ${DB_HOST}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      DB_NAME: ${DB_NAME}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+      AWS_REGION: ${AWS_REGION}
+      AWS_SNS_TOURNAMENT_ARN: ${AWS_SNS_TOURNAMENT_ARN}
+      # SIN AWS_ENDPOINT_OVERRIDE = apunta a AWS real
+    ports:
+      - "9097:9097"
+    depends_on:
+      rabbitmq: {condition: service_healthy}
+ 
+  ticket-service:
+    build:
+      context: ../ticket-service
+      dockerfile: Dockerfile
+    container_name: esport-ticket
+    environment:
+      SPRING_PROFILES_ACTIVE: aws
+      DB_HOST: ${DB_HOST}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      DB_NAME: ${DB_NAME}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PASS: ${REDIS_PASS}
+      AWS_REGION: ${AWS_REGION}
+      AWS_SQS_TICKET_URL: ${AWS_SQS_TICKET_URL}
+    ports:
+      - "8085:8085"
+    depends_on:
+      rabbitmq: {condition: service_healthy}
