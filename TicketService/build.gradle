@@ -6,6 +6,8 @@ buildscript {
 		jacocoVersion = '0.8.12'
 		pitestVersion = '1.15.0'
         lombokVersion = '1.18.36'
+        awsSpringVersion = '3.1.0'
+        awsSdkVersion = '2.21.0'
 	}
 }
 

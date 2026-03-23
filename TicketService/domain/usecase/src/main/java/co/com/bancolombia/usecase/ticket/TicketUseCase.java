@@ -1,5 +1,6 @@
 package co.com.bancolombia.usecase.ticket;
 
+import co.com.bancolombia.model.audit.gateway.AuditGateway;
 import co.com.bancolombia.model.ticketsinventory.TicketInventory;
 import co.com.bancolombia.model.tournamentstage.TournamentStage;
 import co.com.bancolombia.model.tournamentstage.gateways.TournamentStageRepository;
@@ -18,16 +19,33 @@ public class TicketUseCase {
 
     private final TicketInventoryRepository ticketInventoryRepository;
     private final TournamentStageRepository tournamentStageRepository;
+    private final AuditGateway auditTrail;   // NUEVO
 
     public Mono<Void> createTicketsInventory(Integer idTournament) {
 
         return tournamentStageRepository.findByIdTournament(idTournament)
+                // NUEVO: verificar si ya se procesó (idempotencia)
+                // Idempotencia: saltar stages que ya tienen inventario creado
+                .filterWhen(stage -> ticketInventoryRepository
+                        .existsByStageId(stage.getId())
+                        .map(exists -> {
+                            if (exists) {
+                                logger.warning("*****************************************[IDEMPOTENCIA] Inventario ya existe para"+
+                                        " stageId={}, omitiendo"+stage.getId());
+                            }
+                            return !exists;   // true = procesar, false = saltar
+                        }))
                 .flatMap(this::createInventoryTicketsForStage)
+                // Guardar audit solo si se procesó al menos una stage
+                .then(auditTrail.record("*****************************************INVENTORY_CREATED", idTournament,
+                        "Inventario creado para torneo " + idTournament))
                 .then();
     }
 
     // Crear tipos de inventario para cada etapa
     private Mono<Void> createInventoryTicketsForStage(TournamentStage stage) {
+
+        logger.info("******************************Creando inventario para createInventoryTicketsForStage="+stage.toString());
 
         List<Mono<TicketInventory>> inventoryMonos = createInventoryTickets(stage);
 
@@ -36,6 +54,8 @@ public class TicketUseCase {
     }
 
     private List<Mono<TicketInventory>> createInventoryTickets(TournamentStage stage) {
+
+        logger.info("******************************Creando inventario para createInventoryTickets="+stage.toString());
 
         List<Mono<TicketInventory>> inventories = new java.util.ArrayList<>();
 
