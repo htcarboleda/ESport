@@ -14,7 +14,7 @@ echo '[SQS] ✅ DLQ creada: esport-dlq'
 DLQ_ARN='arn:aws:sqs:us-east-1:000000000000:esport-dlq'
 
 awslocal sqs create-queue --queue-name ticket-update-queue \
-  --attributes file://C:/Users/heidy.canarte_pragma/queue-attrs.json
+  --attributes file:///etc/localstack/init/ready.d/queue-attrs.json
 echo '[SQS] ✅ Cola creada: ticket-update-queue'
 
 awslocal sqs create-queue --queue-name notification-queue \
