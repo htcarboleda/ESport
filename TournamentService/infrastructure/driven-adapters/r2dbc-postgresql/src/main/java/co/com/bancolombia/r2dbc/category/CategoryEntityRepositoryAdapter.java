@@ -2,6 +2,7 @@ package co.com.bancolombia.r2dbc.category;
 
 import co.com.bancolombia.model.category.Category;
 import co.com.bancolombia.model.category.gateways.CategoryRepository;
+import co.com.bancolombia.r2dbc.commons.Constants;
 import co.com.bancolombia.r2dbc.entities.CategoryEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,8 +23,16 @@ public class CategoryEntityRepositoryAdapter implements CategoryRepository {
     public Mono<Category> findById(Integer id) {
 
         return r2dbcEntityTemplate.select(CategoryEntity.class)
-                .matching(Query.query(Criteria.where("id_category").is(id)))
+                .matching(Query.query(Criteria.where(Constants.CATEGORY_ID).is(id)))
                 .one()
                 .map(CategoryEntity::toDomain);
     }
+
+    @Override
+    public Mono<Boolean> existsById(Integer id) {
+        return r2dbcEntityTemplate.exists(Query.query(Criteria.where(Constants.CATEGORY_ID).is(id)),
+                        CategoryEntity.class);
+    }
+
+
 }

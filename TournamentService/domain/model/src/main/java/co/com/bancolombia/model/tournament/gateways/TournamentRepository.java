@@ -3,6 +3,8 @@ import co.com.bancolombia.model.tournament.Tournament;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDate;
+
 public interface TournamentRepository {
 
     Flux<Tournament> findAllPaged(int page, int size, Integer category, Integer gameType, Boolean isFree);
@@ -10,4 +12,6 @@ public interface TournamentRepository {
     Mono<Tournament> save(Tournament tournament);
 
     Mono<Tournament> findById(Integer id);
+
+    Mono<Boolean> existsByName(String description, LocalDate startDate, LocalDate endDate);
 }

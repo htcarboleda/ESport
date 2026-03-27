@@ -6,4 +6,5 @@ import reactor.core.publisher.Mono;
 public interface CategoryRepository {
 
     Mono<Category> findById(Integer id);
+    Mono<Boolean> existsById(Integer Id);
 }

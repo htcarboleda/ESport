@@ -1,4 +1,4 @@
-# application-local.yml — Tournament Service (Docker Compose / LocalStack)
+# ── Perfil LOCAL — Docker Compose / LocalStack ────────────────────
 spring:
   config:
     activate:
@@ -13,7 +13,7 @@ spring:
       sns:
         endpoint: http://localhost:4566
 
-# ── Override DB para Docker ───────────────────────────────────────
+# ── Base de datos local ───────────────────────────────────────────
 r2dbc:
   host: ${DB_HOST:localhost}
   port: ${DB_PORT:5432}
@@ -21,9 +21,18 @@ r2dbc:
   username: ${DB_USER:admin}
   password: ${DB_PASS:password}
 
-# ── LocalStack simula AWS ─────────────────────────────────────────
+# ── AWS apunta a LocalStack ───────────────────────────────────────
 aws:
-  sns:
-    tournament-events-arn: arn:aws:sns:us-east-1:000000000000:tournament-events
   region: us-east-1
   endpoint: http://localhost:4566
+  sns:
+    tournament-events-arn: arn:aws:sns:us-east-1:000000000000:tournament-events
+
+# ── Logging más verboso para desarrollo ──────────────────────────
+logging:
+  level:
+    root: INFO
+    co.com.bancolombia: DEBUG
+    io.r2dbc: DEBUG
+    org.springframework.r2dbc: DEBUG
+    org.springframework.data.r2dbc: DEBUG
