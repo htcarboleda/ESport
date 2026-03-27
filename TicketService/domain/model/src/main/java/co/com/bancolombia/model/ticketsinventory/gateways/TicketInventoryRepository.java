@@ -6,6 +6,5 @@ import reactor.core.publisher.Mono;
 public interface TicketInventoryRepository {
 
     Mono<TicketInventory> save(TicketInventory inventarioTicket);
-    Mono<Boolean> existsByStageId(Integer stageId);   // NUEVO
-
+    Mono<Boolean> existsByStageId(Integer stageId);
 }

@@ -1,6 +1,7 @@
 package co.com.bancolombia.sqs.listener;
 
 import co.com.bancolombia.model.audit.gateway.AuditGateway;
+import co.com.bancolombia.sqs.listener.commons.Constants;
 import co.com.bancolombia.usecase.ticket.TicketUseCase;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -24,18 +25,16 @@ public class SqsTicketConsumer {
 
     public Mono<Void> process(Message message) {
         String rawBody = message.body();
-        log.info("[SQS] Mensaje recibido: {}", rawBody);
+        log.info("[SQS] Mensaje recibido completo >>> {} <<<", rawBody);
 
         return Mono.fromCallable(() -> extractPayload(rawBody))
                 .flatMap(payload -> {
                     Integer tournamentId = extractTournamentId(payload);
                     String eventType = extractEventType(payload);
                     log.info("[SQS] Procesando {} tournamentId={}", eventType, tournamentId);
-                    return ticketUseCase.createTicketsInventory(tournamentId)
-                            .then(auditTrail.record(eventType, tournamentId,
-                                    "Inventario creado vía SQS"));
+                    return ticketUseCase.createTicketsInventory(tournamentId);
                 })
-                .doOnSuccess(v -> log.info("[SQS] OK mensaje procesado"))
+                .doOnSuccess(v -> log.info("[SQS] Mensaje procesado exitosamente !!"))
                 .onErrorResume(JsonParseException.class, e -> {
                     log.warn("[SQS] Mensaje ignorado — no es JSON válido. Body: '{}'. Error: {}",
                             rawBody, e.getMessage());
@@ -46,11 +45,11 @@ public class SqsTicketConsumer {
 
     private Map<String, Object> extractPayload(String rawBody) throws Exception {
         Map<String, Object> outer = objectMapper.readValue(rawBody, new TypeReference<>() {});
-        if (outer.containsKey("Message")) {
-            String inner = (String) outer.get("Message");
+        if (outer.containsKey(Constants.MESSAGES)) {
+            String inner = (String) outer.get(Constants.MESSAGES);
             if (!inner.trim().startsWith("{")) {
                 throw new JsonParseException(null,
-                        "El campo 'Message' del envelope SNS no es JSON: '" + inner + "'");
+                        "[SQS]  El campo 'Message' del envelope no es JSON: '" + inner + "'");
             }
             return objectMapper.readValue(inner, new TypeReference<>() {});
         }
@@ -58,12 +57,12 @@ public class SqsTicketConsumer {
     }
 
     private Integer extractTournamentId(Map<String, Object> payload) {
-        Object id = payload.get("tournamentId");
-        if (id == null) throw new IllegalArgumentException("tournamentId no encontrado en el mensaje");
+        Object id = payload.get(Constants.P_TOURNAMENT);
+        if (id == null) throw new IllegalArgumentException("[SQS] tournamentId no encontrado en el mensaje");
         return ((Number) id).intValue();
     }
 
     private String extractEventType(Map<String, Object> payload) {
-        return (String) payload.getOrDefault("eventType", "TOURNAMENT_CREATED");
+        return (String) payload.getOrDefault(Constants.EVENT_TYPE, payload.get(Constants.P_EVENT_TYPE));
     }
 }

@@ -21,10 +21,9 @@ public class TicketInventoryEntityRepositoryAdapter implements TicketInventoryRe
         return ticketInventoryEntityRepository.save(TicketsInventoryEntity.fromDomain(inventarioTicket))
                 .map(TicketsInventoryEntity::toDomain)
                 .onErrorResume(e -> {
-                    log.error("Error saving ticket inventory: {}", e.getMessage(), e);
-                    return Mono.empty(); // Return empty instead of null
+                    log.error("[INVENTORY] Error al guardar el registro de inventario de ticket: {}", e.getMessage(), e);
+                    return Mono.empty();
                 });
-
     }
 
     @Override

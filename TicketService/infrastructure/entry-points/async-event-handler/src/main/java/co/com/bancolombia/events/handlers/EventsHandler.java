@@ -12,9 +12,9 @@ public class EventsHandler {
 
     private final TicketUseCase ticketUseCase;
 
-    public Mono<Void> handleEventA(DomainEvent<Object> event) {
-        //return ticketUseCase.createTicketsInventory((Integer) event.getData());
-        return Mono.empty();
+    public Mono<Void> handleEventA(DomainEvent<Integer> event) {
+        return ticketUseCase.createTicketsInventory(event.getData());
+        //return Mono.empty();
     }
 
 }

@@ -11,5 +11,6 @@ public record SQSProperties(
         @DefaultValue("20") int waitTimeSeconds,
         @DefaultValue("30") int visibilityTimeoutSeconds,
         @DefaultValue("10") int maxNumberOfMessages,
-        @DefaultValue("2")  int numberOfThreads) {
+        @DefaultValue("1")  int numberOfThreads,
+        @DefaultValue("0")  int startupDelaySeconds) {
 }

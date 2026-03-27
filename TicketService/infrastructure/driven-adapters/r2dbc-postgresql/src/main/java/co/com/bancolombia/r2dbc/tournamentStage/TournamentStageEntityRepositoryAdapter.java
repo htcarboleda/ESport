@@ -2,6 +2,7 @@ package co.com.bancolombia.r2dbc.tournamentStage;
 
 import co.com.bancolombia.model.tournamentstage.TournamentStage;
 import co.com.bancolombia.model.tournamentstage.gateways.TournamentStageRepository;
+import co.com.bancolombia.r2dbc.commons.Constants;
 import co.com.bancolombia.r2dbc.entities.TournamentStageEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +24,7 @@ public class TournamentStageEntityRepositoryAdapter implements TournamentStageRe
     public Flux<TournamentStage> findByIdTournament(Integer idTournament) {
 
         return r2dbcEntityTemplate.select(TournamentStageEntity.class)
-                .matching(Query.query(Criteria.where("fk_id_tournament").is(idTournament)))
+                .matching(Query.query(Criteria.where(Constants.TOURNAMENT_ID_FK).is(idTournament)))
                 .all()
                 .map(TournamentStageEntity::toDomain)   ;
     }

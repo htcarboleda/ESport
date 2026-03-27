@@ -6,8 +6,10 @@ import co.com.bancolombia.model.tournamentstage.TournamentStage;
 import co.com.bancolombia.model.tournamentstage.gateways.TournamentStageRepository;
 import lombok.RequiredArgsConstructor;
 import co.com.bancolombia.model.ticketsinventory.gateways.TicketInventoryRepository;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -19,132 +21,60 @@ public class TicketUseCase {
 
     private final TicketInventoryRepository ticketInventoryRepository;
     private final TournamentStageRepository tournamentStageRepository;
-    private final AuditGateway auditTrail;   // NUEVO
+    private final AuditGateway auditTrail;
 
     public Mono<Void> createTicketsInventory(Integer idTournament) {
-
         return tournamentStageRepository.findByIdTournament(idTournament)
-                // NUEVO: verificar si ya se procesó (idempotencia)
-                // Idempotencia: saltar stages que ya tienen inventario creado
-                .filterWhen(stage -> ticketInventoryRepository
-                        .existsByStageId(stage.getId())
-                        .map(exists -> {
-                            if (exists) {
-                                logger.warning("*****************************************[IDEMPOTENCIA] Inventario ya existe para"+
-                                        " stageId={}, omitiendo"+stage.getId());
-                            }
-                            return !exists;   // true = procesar, false = saltar
-                        }))
-                .flatMap(this::createInventoryTicketsForStage)
-                // Guardar audit solo si se procesó al menos una stage
-                .then(auditTrail.record("*****************************************INVENTORY_CREATED", idTournament,
-                        "Inventario creado para torneo " + idTournament))
+                .flatMap(this::createInventoryForStage)
                 .then();
     }
 
-    // Crear tipos de inventario para cada etapa
-    private Mono<Void> createInventoryTicketsForStage(TournamentStage stage) {
-
-        logger.info("******************************Creando inventario para createInventoryTicketsForStage="+stage.toString());
-
-        List<Mono<TicketInventory>> inventoryMonos = createInventoryTickets(stage);
-
-        // Ejecutar todas las operaciones en paralelo
-        return Mono.when(inventoryMonos);
+    private Mono<Void> createInventoryForStage(TournamentStage stage) {
+        return buildTicketDefinitions(stage)
+                .flatMap(ticket -> ticketInventoryRepository.save(ticket)
+                        .doOnSuccess(saved -> logger.info(
+                                "[INVENTORY] Ticket creado type= "+ saved.getTicketType()
+                                        +"stageId= " + stage.getId()))
+                        .doOnError(e -> logger.warning(
+                                "[INVENTORY] Error creando ticket type= "+ ticket.getTicketType()
+                                        +" stageId= "+ stage.getId() +" : "+ e.getMessage())))
+                .flatMap(saved -> auditTrail.record("Created_bd_tickets_inventory",
+                                saved.toString())
+                        .thenReturn(saved))
+                .then();
     }
 
-    private List<Mono<TicketInventory>> createInventoryTickets(TournamentStage stage) {
+    // Construccion de Tickets
+    private Flux<TicketInventory> buildTicketDefinitions(TournamentStage stage) {
+        return Flux.fromIterable(resolveTicketSlots(stage));
+    }
 
-        logger.info("******************************Creando inventario para createInventoryTickets="+stage.toString());
+    private List<TicketInventory> resolveTicketSlots(TournamentStage stage) {
+        List<TicketInventory> tickets = new ArrayList<>();
 
-        List<Mono<TicketInventory>> inventories = new java.util.ArrayList<>();
+        addIfPositive(tickets, stage, "PARTICIPANT", stage.getPaidParticipantSlots(), stage.getParticipantPrice());
+        addIfPositive(tickets, stage, "PARTICIPANT", stage.getFreeParticipantSlots(), 0.0);
+        addIfPositive(tickets, stage, "SPECTATOR",   stage.getPaidSpectatorSlots(),   stage.getSpectatorPrice());
+        addIfPositive(tickets, stage, "SPECTATOR",   stage.getFreeSpectatorSlots(),   0.0);
 
-        // Tickets para participantes pago
-        if(stage.getPaidParticipantSlots() > 0) {
-            TicketInventory paidParticipant = TicketInventory.builder()
-                    .tournamentId(stage.getTournamentId())
-                    .stageId(stage.getId())
-                    .ticketType("PARTICIPANT")
-                    .totalQuantity(stage.getPaidParticipantSlots())
-                    .availableQuantity(0)
-                    .reservedQuantity(0)
-                    .soldQuantity(0)
-                    .basePrice(stage.getParticipantPrice())
-                    .version(1)
-                    .build();
-            Mono<TicketInventory> savedMono = ticketInventoryRepository.save(paidParticipant);
-            if (savedMono != null) {
-                inventories.add(savedMono);
-            } else {
-                logger.warning("Valor null");
-            }
-        }
+        return tickets;
+    }
 
-        // Tickets para participantes gratis
-        if(stage.getFreeParticipantSlots() > 0) {
-            TicketInventory freeParticipant = TicketInventory.builder()
-                    .tournamentId(stage.getTournamentId())
-                    .stageId(stage.getId())
-                    .ticketType("PARTICIPANT")
-                    .totalQuantity(stage.getFreeParticipantSlots())
-                    .availableQuantity(0)
-                    .reservedQuantity(0)
-                    .soldQuantity(0)
-                    .basePrice(0.0)
-                    .version(1)
-                    .build();
-            Mono<TicketInventory> savedMono = ticketInventoryRepository.save(freeParticipant);
-            if (savedMono != null) {
-                inventories.add(savedMono);
-            } else {
-                logger.warning("Valor null");
-            }
-        }
+    private void addIfPositive(List<TicketInventory> tickets, TournamentStage stage,
+                               String type, int slots, double price) {
+        if (slots <= 0) return;
 
-
-        // Tickets para espectadores pago
-        if(stage.getPaidSpectatorSlots() > 0) {
-            TicketInventory paidSpectator = TicketInventory.builder()
-                    .tournamentId(stage.getTournamentId())
-                    .stageId(stage.getId())
-                    .ticketType("SPECTATOR")
-                    .totalQuantity(stage.getPaidSpectatorSlots())
-                    .availableQuantity(0)
-                    .reservedQuantity(0)
-                    .soldQuantity(0)
-                    .basePrice(stage.getSpectatorPrice())
-                    .version(1)
-                    .build();
-            Mono<TicketInventory> savedMono = ticketInventoryRepository.save(paidSpectator);
-            if (savedMono != null) {
-                inventories.add(savedMono);
-            } else {
-                logger.warning("Valor null");
-            }
-        }
-
-        // Tickets para espectadores gratis
-        if(stage.getFreeSpectatorSlots() > 0) {
-            TicketInventory freeSpectator = TicketInventory.builder()
-                    .tournamentId(stage.getTournamentId())
-                    .stageId(stage.getId())
-                    .ticketType("SPECTATOR")
-                    .totalQuantity(stage.getFreeSpectatorSlots())
-                    .availableQuantity(0)
-                    .reservedQuantity(0)
-                    .soldQuantity(0)
-                    .basePrice(0.0)
-                    .version(1)
-                    .build();
-            Mono<TicketInventory> savedMono = ticketInventoryRepository.save(freeSpectator);
-            if (savedMono != null) {
-                inventories.add(savedMono);
-            } else {
-                logger.warning("Valor null");
-            }
-        }
-
-        return inventories;
+        tickets.add(TicketInventory.builder()
+                .tournamentId(stage.getTournamentId())
+                .stageId(stage.getId())
+                .ticketType(type)
+                .totalQuantity(slots)
+                .availableQuantity(0)
+                .reservedQuantity(0)
+                .soldQuantity(0)
+                .basePrice(price)
+                .version(1)
+                .build());
     }
 
 }

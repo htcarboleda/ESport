@@ -1,5 +1,6 @@
 package co.com.bancolombia.sqs.listener.helper;
 
+import co.com.bancolombia.sqs.listener.commons.Constants;
 import co.com.bancolombia.sqs.listener.config.SQSProperties;
 import lombok.Builder;
 import lombok.extern.log4j.Log4j2;
@@ -48,8 +49,8 @@ public class SQSListener {
     private Flux<Void> listen() {
         return getMessages()
                 .flatMap(message -> processor.apply(message)
-                        .name("async_operation")
-                        .tag("operation", operation)
+                        .name(Constants.ASYNC_OPERATION)
+                        .tag(Constants.OPERATION, operation)
                         .metrics()
                         .then(confirm(message)))
                 .onErrorContinue((e, o) -> log.error("Error listening sqs message", e));
