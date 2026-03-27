@@ -1,11 +1,11 @@
 package co.com.bancolombia.model.ticketsinventory;
 import lombok.Builder;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter
-@Setter
+@Data
 @AllArgsConstructor
 @Builder(toBuilder = true)
 public class TicketInventory {

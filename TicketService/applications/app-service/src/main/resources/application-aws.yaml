@@ -2,27 +2,17 @@ spring:
   config:
     activate:
       on-profile: aws
+  cloud:
+    aws:
+      credentials:
+        instance-profile: true    # usa el rol IAM del EC2/ECS
+      region:
+        static: ${AWS_REGION:us-east-1}
 
-r2dbc:
-  host: ${RDS_HOST}
-  username: ${RDS_USER}
-  password: ${RDS_PASS}
-
+# En AWS real NO se usa endpoint override (se borra el default de LocalStack)
 aws:
-  endpoint: ""    # vacío = apunta a AWS real
+  endpoint: ""
 
-spring.cloud.aws:
-  credentials:
-    instance-profile: true    # usa el rol IAM del EC2/ECS
-  region:
-    static: us-east-1
-
-spring.data.redis:
-  host: ${ELASTICACHE_HOST}
-
-app:
-  async:
-    rabbit-mq:
-      host:     ${RABBITMQ_HOST}
-      username: ${RABBITMQ_USER}
-      password: ${RABBITMQ_PASS}
+entrypoint:
+  sqs:
+    endpoint: ""
