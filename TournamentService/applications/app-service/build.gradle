@@ -1,6 +1,9 @@
 apply plugin: 'org.springframework.boot'
 
 dependencies {
+	implementation project(':redis')
+	implementation project(':dynamo-db')
+	implementation project(':metrics')
 	implementation project(':sns-event-publisher')
 	implementation project(':async-event-bus')
 	implementation project(':constant')

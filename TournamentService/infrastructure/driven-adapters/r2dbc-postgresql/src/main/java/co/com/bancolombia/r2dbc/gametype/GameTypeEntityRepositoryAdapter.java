@@ -1,6 +1,7 @@
 package co.com.bancolombia.r2dbc.gametype;
 
 import co.com.bancolombia.model.gametype.GameType;
+import co.com.bancolombia.r2dbc.commons.Constants;
 import co.com.bancolombia.r2dbc.entities.GameTypeEntity;
 import co.com.bancolombia.model.gametype.gateways.GameTypesRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,8 +23,15 @@ public class GameTypeEntityRepositoryAdapter implements GameTypesRepository {
     public Mono<GameType> findById(Integer id) {
 
         return r2dbcEntityTemplate.select(GameTypeEntity.class)
-                .matching(Query.query(Criteria.where("id_game_type").is(id)))
+                .matching(Query.query(Criteria.where(Constants.GAMETIME_ID).is(id)))
                 .one()
                 .map(GameTypeEntity::toDomain);
     }
+
+    @Override
+    public Mono<Boolean> existsById(Integer id) {
+        return r2dbcEntityTemplate.exists(Query.query(Criteria.where(Constants.GAMETIME_ID).is(id)),
+                GameTypeEntity.class);
+    }
+
 }

@@ -1,13 +1,15 @@
 package co.com.bancolombia.snseventpublisher;
 
-import co.com.bancolombia.model.events.gateways.SnsEventGateway;
+import co.com.bancolombia.model.events.gateways.EventsGateway;
 import co.com.bancolombia.model.tournament.Tournament;
+import co.com.bancolombia.snseventpublisher.commons.Constants;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.awspring.cloud.sns.core.SnsTemplate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -15,11 +17,11 @@ import reactor.core.scheduler.Schedulers;
 import java.util.HashMap;
 import java.util.Map;
 
-
 @Slf4j
+@Profile("aws")
 @Component
 @RequiredArgsConstructor
-public class SnsEventPublisher implements SnsEventGateway {
+public class SnsEventPublisher implements EventsGateway {
 
     private final SnsTemplate snsTemplate;
     private final ObjectMapper objectMapper;
@@ -28,72 +30,45 @@ public class SnsEventPublisher implements SnsEventGateway {
     private String tournamentTopicArn;
 
     @Override
-    public Mono<Void> publishTournamentCreated(Tournament tournament) {
-        log.info("[SNS] Iniciando publicación TOURNAMENT_CREATED tournamentId={}", tournament.getId());
+    public Mono<Void> emit(Tournament tournament) {
+         log.info("[SNS] Iniciando publicación evento tournamentId={}", tournament.getId());
 
-        return Mono.fromRunnable(() -> {
-            try {
-                Map<String, Object> payload = new HashMap<>();
-                payload.put("eventType", "TOURNAMENT_CREATED");
-                payload.put("tournamentId", tournament.getId());
-                payload.put("name", tournament.getName());
-                payload.put("status", tournament.getStatus() != null ? tournament.getStatus().name() : null);
-                payload.put("categoryId", tournament.getCategoryId());
-                payload.put("gameTypeId", tournament.getGameTypeId());
-                payload.put("isFree", tournament.getIsFree());
-                payload.put("startDate", tournament.getStartDate() != null ? tournament.getStartDate().toString() : null);
-                payload.put("endDate", tournament.getEndDate() != null ? tournament.getEndDate().toString() : null);
+            return buildPayload(tournament)
+                    .flatMap(message -> Mono.fromRunnable(
+                            () -> snsTemplate.convertAndSend(tournamentTopicArn, message)))
+                    .doOnSuccess(v -> log.info("[SNS] Finalizado publicacion evento tournamentId={}", tournament.getId()))
+                    .doOnError(e -> log.error("[SNS] Error tournamentId={}: {}", tournament.getId(), e.getMessage()))
+                    .onErrorMap(JsonProcessingException.class, e ->
+                             new RuntimeException(
+                                    "[SNS] Fallo al enviar evento tournamentId=" + tournament.getId()
+                                            + " | tipo: " + e.getClass().getSimpleName()
+                                            + " | detalle: " + e.getMessage(), e))
+                    .subscribeOn(Schedulers.boundedElastic())
+                    .then();
 
-                String message = objectMapper.writeValueAsString(payload);
-                snsTemplate.convertAndSend(tournamentTopicArn, message);
-                log.info("[SNS] Publicado TOURNAMENT_CREATED tournamentId={}", tournament.getId());
-
-            } catch (JsonProcessingException e) {
-                log.error("[SNS] Error serializando payload TOURNAMENT_CREATED tournamentId={} — causa: {}",
-                        tournament.getId(), e.getMessage(), e);
-                throw new RuntimeException(
-                        "[SNS] Error serializando payload para tournamentId=" + tournament.getId(), e);
-            } catch (Exception e) {
-                Throwable cause = e.getCause() != null ? e.getCause() : e;
-                log.error("[SNS] Error enviando TOURNAMENT_CREATED tournamentId={} — tipo: {} — causa: {}",
-                        tournament.getId(), cause.getClass().getSimpleName(), cause.getMessage(), e);
-                throw new RuntimeException(
-                        "[SNS] Fallo al enviar evento TOURNAMENT_CREATED tournamentId=" + tournament.getId()
-                        + " | tipo: " + cause.getClass().getSimpleName()
-                        + " | detalle: " + cause.getMessage(), e);
-            }
-        }).subscribeOn(Schedulers.boundedElastic()).then();
     }
 
-    @Override
-    public Mono<Void> publishTournamentStatusChanged(Integer tournamentId, String newStatus) {
-        log.info("[SNS] Iniciando publicación TOURNAMENT_STATUS_CHANGED tournamentId={}", tournamentId);
+    private Mono<String> buildPayload(Tournament tournament) {
+        return Mono.fromCallable(() -> {
+                    Map<String, Object> payload = new HashMap<>();
+                    payload.put("eventType",    Constants.EVENT_TOURNAMENT_CREATE);
+                    payload.put("tournamentId", tournament.getId());
+                    payload.put("name",         tournament.getName());
+                    payload.put("status",       tournament.getStatus() != null
+                            ? tournament.getStatus().name() : null);
+                    payload.put("categoryId",   tournament.getCategoryId());
+                    payload.put("gameTypeId",   tournament.getGameTypeId());
+                    payload.put("isFree",       tournament.getIsFree());
+                    payload.put("startDate",    tournament.getStartDate() != null
+                            ? tournament.getStartDate().toString() : null);
+                    payload.put("endDate",      tournament.getEndDate() != null
+                            ? tournament.getEndDate().toString() : null);
 
-        return Mono.fromRunnable(() -> {
-            try {
-                Map<String, Object> payload = new HashMap<>();
-                payload.put("eventType", "TOURNAMENT_STATUS_CHANGED");
-                payload.put("tournamentId", tournamentId);
-                payload.put("newStatus", newStatus);
-
-                String message = objectMapper.writeValueAsString(payload);
-                snsTemplate.convertAndSend(tournamentTopicArn, message);
-                log.info("[SNS] Publicado TOURNAMENT_STATUS_CHANGED tournamentId={}", tournamentId);
-
-            } catch (JsonProcessingException e) {
-                log.error("[SNS] Error serializando payload TOURNAMENT_STATUS_CHANGED tournamentId={} — causa: {}",
-                        tournamentId, e.getMessage(), e);
-                throw new RuntimeException(
-                        "[SNS] Error serializando payload para tournamentId=" + tournamentId, e);
-            } catch (Exception e) {
-                Throwable cause = e.getCause() != null ? e.getCause() : e;
-                log.error("[SNS] Error enviando TOURNAMENT_STATUS_CHANGED tournamentId={} — tipo: {} — causa: {}",
-                        tournamentId, cause.getClass().getSimpleName(), cause.getMessage(), e);
-                throw new RuntimeException(
-                        "[SNS] Fallo al enviar evento TOURNAMENT_STATUS_CHANGED tournamentId=" + tournamentId
-                        + " | tipo: " + cause.getClass().getSimpleName()
-                        + " | detalle: " + cause.getMessage(), e);
-            }
-        }).subscribeOn(Schedulers.boundedElastic()).then();
+                    return objectMapper.writeValueAsString(payload);
+                })
+                .onErrorMap(JsonProcessingException.class, e ->
+                        new RuntimeException(
+                                "[SNS] Error serializando payload tournamentId=" + tournament.getId(), e))
+                 ;
     }
 }

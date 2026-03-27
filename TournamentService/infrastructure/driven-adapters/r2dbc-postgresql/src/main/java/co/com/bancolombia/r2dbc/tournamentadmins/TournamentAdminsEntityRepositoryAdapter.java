@@ -2,6 +2,7 @@ package co.com.bancolombia.r2dbc.tournamentadmins;
 
 import co.com.bancolombia.model.tournamentadmin.TournamentAdmin;
 import co.com.bancolombia.model.tournamentadmin.gateways.TournamentAdminRepository;
+import co.com.bancolombia.r2dbc.commons.Constants;
 import co.com.bancolombia.r2dbc.entities.TournamentAdminsEntity;
 import co.com.bancolombia.r2dbc.entities.UserEntity;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +25,7 @@ public class TournamentAdminsEntityRepositoryAdapter  implements TournamentAdmin
         return tournamentAdminsEntityRepository.save(TournamentAdminsEntity.fromDomain(tournamentAdmin))
                 .flatMap(tournamentAdminEntity -> {
                     Mono<UserEntity> userEntityMono = r2dbcEntityTemplate.selectOne(
-                            Query.query(Criteria.where("id_user").is(tournamentAdminEntity.getUserId())), UserEntity.class);
+                            Query.query(Criteria.where(Constants.USER_ID).is(tournamentAdminEntity.getUserId())), UserEntity.class);
 
                     return userEntityMono
                             .map(tournamentAdminEntity::toDomain)

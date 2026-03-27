@@ -3,9 +3,10 @@ package co.com.bancolombia.api.exceptions;
 import co.com.bancolombia.api.dto.validator.ObjectValidationException;
 import co.com.bancolombia.api.exceptions.error.ErrorResponse;
 import co.com.bancolombia.model.exceptions.BusinessException;
+import co.com.bancolombia.model.exceptions.SecurityException;
 import co.com.bancolombia.model.exceptions.TechnicalException;
-import co.com.bancolombia.model.exceptions.message.ErrorMessage;
 import co.com.bancolombia.constant.Constants;
+import co.com.bancolombia.model.exceptions.message.TechnicalMessages;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.web.WebProperties;
 import org.springframework.boot.autoconfigure.web.reactive.error.AbstractErrorWebExceptionHandler;
@@ -91,9 +92,20 @@ public class ExceptionHandler extends AbstractErrorWebExceptionHandler {
                             .bodyValue(rs);
                 })
 
+                .onErrorResume(SecurityException.class, error -> {
+                    log.warn(Constants.SECURITY_EXCEPTION, error);
+                    ErrorResponse rs = ErrorResponse.builder()
+                            .message(error.getSecurityErrorMessage().getMessage())
+                            .build();
+                    return ServerResponse
+                            .status(error.getSecurityErrorMessage().getStatus())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .bodyValue(rs);
+                })
+
                 .onErrorResume(Exception.class, error -> {
                     log.error(Constants.EXCEPTION, error);
-                    ErrorMessage errorMessage = ErrorMessage.EXTERNAL_MESSAGE_ERROR;
+                    TechnicalMessages errorMessage = TechnicalMessages.UNEXPECTED_EXCEPTION;
                     ErrorResponse rs = ErrorResponse.builder()
                             .message(errorMessage.getMessage())
                             .build();

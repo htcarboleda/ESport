@@ -5,4 +5,5 @@ import reactor.core.publisher.Mono;
 
 public interface GameTypesRepository {
     Mono<GameType> findById(Integer id);
+    Mono<Boolean> existsById(Integer Id);
 }

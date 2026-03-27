@@ -1,6 +1,6 @@
 package co.com.bancolombia.usecase.tournament;
 import co.com.bancolombia.model.exceptions.BusinessException;
-import co.com.bancolombia.model.exceptions.message.ErrorMessage;
+import co.com.bancolombia.model.exceptions.message.BussinessMessages;
 import co.com.bancolombia.model.tournament.Tournament;
 import co.com.bancolombia.model.tournament.gateways.TournamentRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +22,7 @@ public class GetTournamentsUseCase {
 
     public Mono<Tournament> findById(Integer id) {
         return tournamentRepository.findById(id)
-                .switchIfEmpty(Mono.error(new BusinessException(ErrorMessage.TOURNAMENT_NOT_FOUND)));
+                .switchIfEmpty(Mono.error(new BusinessException(BussinessMessages.TOURNAMENT_NOT_FOUND)));
     }
 
 }
